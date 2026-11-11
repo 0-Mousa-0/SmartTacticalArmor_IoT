@@ -1,0 +1,51 @@
+/* Design tokens — dark operations-room theme.
+   Semantic names only; components never hard-code colours. */
+:root {
+  color-scheme: dark;
+
+  --bg: #070d18;
+  --bg-elev: #0a1322;
+  --surface: #0f1a2c;
+  --surface-2: #132236;
+  --surface-3: #1a2c45;
+  --border: #20324b;
+  --border-strong: #2d4566;
+
+  --text: #e6eef9;
+  --text-muted: #93a6bd;
+  --text-faint: #66798f;
+
+  --accent: #35d0ba;
+  --accent-strong: #1fb39d;
+  --accent-soft: rgb(53 208 186 / 0.13);
+  --on-accent: #04201b;
+
+  --info: #5aa9ff;
+  --info-soft: rgb(90 169 255 / 0.14);
+  --warning: #f5b94f;
+  --warning-soft: rgb(245 185 79 / 0.14);
+  --critical: #ff5c6c;
+  --critical-soft: rgb(255 92 108 / 0.15);
+  --success: #3ddc97;
+  --success-soft: rgb(61 220 151 / 0.13);
+  --ai: #a78bfa;
+  --ai-soft: rgb(167 139 250 / 0.15);
+
+  --risk-normal: #3ddc97;
+  --risk-elevated: #f2d14b;
+  --risk-high: #ff9f43;
+  --risk-critical: #ff5c6c;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 10px 30px rgb(0 0 0 / 0.28);
+  --ring: 0 0 0 3px rgb(53 208 186 / 0.35);
+
+  --font-sans: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --sidebar-w: 252px;
+  --topbar-h: 60px;
+  --gap: 16px;
+}

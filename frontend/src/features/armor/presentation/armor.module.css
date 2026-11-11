@@ -1,0 +1,112 @@
+.top,
+.bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+.layers {
+  display: grid;
+  grid-template-columns: 46px 1fr 1fr 34px;
+  min-height: 150px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.layers > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px;
+  font-size: 12.5px;
+}
+
+.layers span {
+  color: rgb(255 255 255 / 0.78);
+}
+
+.layerOutside {
+  background: repeating-linear-gradient(45deg, var(--surface-2) 0 6px, var(--bg-elev) 6px 12px);
+  color: transparent;
+}
+
+.layerKevlar {
+  background: linear-gradient(135deg, #8a6d2c, #b8923d);
+  color: #fff;
+}
+
+.layerBi {
+  background: linear-gradient(135deg, #1f6f66, #2aa392);
+  color: #fff;
+}
+
+.layerWearer {
+  background: var(--surface-3);
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.order {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.sensing {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.sensor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+
+.finding {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.source {
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text-faint);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 1100px) {
+  .top,
+  .bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

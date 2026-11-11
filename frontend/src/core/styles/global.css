@@ -1,0 +1,156 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+[dir='rtl'] {
+  --dir-flip: -1;
+}
+
+/* Pulsing ring on map markers that need attention */
+.map-pulse {
+  animation: map-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes map-pulse {
+  50% {
+    stroke-opacity: 0.25;
+    fill-opacity: 0.45;
+  }
+}
+
+/* Numbers, codes and coordinates read left-to-right even in Arabic. */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Leaflet: dark popups / tooltips that match the theme */
+.leaflet-container {
+  background: #0b1422;
+  font-family: var(--font-sans);
+}
+
+/* OpenStreetMap tiles turned into a dark basemap (no third-party API key). */
+.map-tiles-dark {
+  filter: invert(100%) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.35);
+}
+
+/* Higher specificity than leaflet.css, which is loaded after this file. */
+.leaflet-container .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup-tip,
+.leaflet-container .leaflet-tooltip {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.leaflet-container .leaflet-tooltip::before {
+  display: none;
+}
+
+.leaflet-control-attribution {
+  background: rgb(7 13 24 / 0.75) !important;
+  color: var(--text-faint) !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--text-muted) !important;
+}
+
+.leaflet-bar a {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

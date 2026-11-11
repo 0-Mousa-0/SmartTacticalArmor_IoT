@@ -1,0 +1,23 @@
+/* ── Risk panel ─────────────────────────────────────────── */
+.risk { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+.ring { width: 118px; height: 118px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.ringInner { width: 92px; height: 92px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ringScore { font-size: 30px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.ringLevel { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.factors { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 8px; }
+.factorsTitle { font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+.factors ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.factors li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 8px; background: var(--bg-elev); font-size: 13px; }
+.factors li strong { color: var(--warning); }
+.updated { font-size: 11.5px; color: var(--text-faint); }
+
+/* ── Command panel ──────────────────────────────────────── */
+.commands { display: flex; flex-direction: column; gap: 14px; }
+.commandGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.intervalRow { display: flex; flex-direction: column; gap: 6px; }
+.log { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+.log ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.log li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.log li:last-child { border-bottom: 0; }
+.logMain { min-width: 0; }
+.logMeta { display: block; font-size: 11.5px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

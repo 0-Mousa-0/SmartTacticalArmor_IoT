@@ -1,0 +1,49 @@
+.item {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  text-align: start;
+  cursor: default;
+}
+button.item { cursor: pointer; }
+button.item:hover { background: var(--surface-2); }
+.itemSelected { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+[dir='rtl'] .itemSelected { box-shadow: inset -3px 0 0 var(--accent); }
+.bar { width: 4px; border-radius: 4px; flex: none; }
+.itemMain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.itemTitle { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.target { color: var(--text-muted); font-size: 12.5px; }
+.itemMeta { display: flex; gap: 6px; flex-wrap: wrap; }
+.itemSide { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 6px; flex: none; }
+.priority {
+  min-width: 34px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--surface-3);
+  font-size: 12.5px;
+}
+.time { font-size: 12px; color: var(--text-faint); white-space: nowrap; }
+
+/* ── Detail panel ───────────────────────────────────────── */
+.detailHeader { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.detailTitle { font-size: 18px; font-weight: 700; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.message { background: var(--ai-soft); color: var(--text); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; }
+.actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.actionButtons { display: flex; gap: 8px; flex-wrap: wrap; }
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.timeline li { position: relative; padding-inline-start: 22px; padding-block: 0 14px; font-size: 13px; }
+.timeline li::before { content: ''; position: absolute; inset-inline-start: 5px; top: 6px; bottom: -6px; width: 2px; background: var(--border); }
+.timeline li:last-child::before { display: none; }
+.timeline li::after { content: ''; position: absolute; inset-inline-start: 0; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface-3); border: 2px solid var(--accent); }
+.eventTime { color: var(--text-faint); font-size: 12px; }
+.eventNote { color: var(--text-muted); }

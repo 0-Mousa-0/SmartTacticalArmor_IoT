@@ -1,0 +1,49 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: var(--gap);
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+}
+
+.filters select {
+  width: auto;
+  min-width: 170px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--gap);
+  align-items: start;
+}
+
+.list {
+  max-height: calc(100vh - 230px);
+  overflow: auto;
+}
+
+.detail {
+  position: sticky;
+  top: calc(var(--topbar-h) + 16px);
+}
+
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .list {
+    max-height: 480px;
+  }
+
+  .detail {
+    position: static;
+  }
+}

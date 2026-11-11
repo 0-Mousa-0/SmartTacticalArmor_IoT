@@ -1,0 +1,69 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  min-width: 0;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-inline-start: 4px;
+}
+
+.hint {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.missing {
+  border-style: dashed;
+  background: transparent;
+}
+
+.missing .label {
+  color: var(--text-faint);
+}
+
+.notFitted {
+  font-size: 12px;
+  color: var(--text-faint);
+  padding-top: 6px;
+}
+
+.warning {
+  border-color: rgb(245 185 79 / 0.6);
+  background: var(--warning-soft);
+}
+
+.critical {
+  border-color: rgb(255 92 108 / 0.7);
+  background: var(--critical-soft);
+}
