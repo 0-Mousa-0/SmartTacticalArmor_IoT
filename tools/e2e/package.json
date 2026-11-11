@@ -1,0 +1,11 @@
+{
+  "name": "sta-e2e-broker",
+  "private": true,
+  "description": "Throwaway local MQTT broker (no TLS, no auth) for the end-to-end test",
+  "scripts": {
+    "broker": "node local_broker.js"
+  },
+  "dependencies": {
+    "aedes": "0.51.3"
+  }
+}
