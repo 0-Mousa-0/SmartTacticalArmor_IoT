@@ -1,0 +1,72 @@
+# Render Blueprint — deploys the API and the dashboard from this repository.
+# Render dashboard -> New -> Blueprint -> select this repo. Values marked
+# `sync: false` are asked for once, at creation (see docs/08-deploy-render.md).
+services:
+  # ── Flask API + MQTT ingestion (free web service) ───────────────
+  - type: web
+    name: dera-sta-api
+    runtime: python
+    plan: free
+    region: frankfurt            # same region as the Supabase project keeps queries fast
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # Free plan has no pre-deploy step: apply migrations, then start gunicorn.
+    startCommand: flask --app wsgi db upgrade && gunicorn -c gunicorn.conf.py wsgi:app
+    healthCheckPath: /api/v1/health
+    autoDeployTrigger: checksPass   # deploy only after the GitHub Actions CI passes
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL          # Supabase -> Connect -> Session pooler URI
+        sync: false
+      - key: CORS_ORIGINS          # https://<dashboard>.onrender.com
+        sync: false
+      - key: BOOTSTRAP_ADMIN_EMAIL # first administrator, created on first start
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+      - key: MQTT_ENABLED
+        value: "true"
+      - key: MQTT_HOST             # EMQX deployment address
+        sync: false
+      - key: MQTT_PORT
+        value: "8883"
+      - key: MQTT_USERNAME
+        value: sta-backend
+      - key: MQTT_PASSWORD
+        sync: false
+      - key: MQTT_CLIENT_ID
+        value: sta-backend
+      - key: TELEMETRY_RETENTION_DAYS
+        value: "7"
+
+  # ── React dashboard (free static site on Render's CDN) ──────────
+  - type: web
+    name: dera-sta-dashboard
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - frontend/**
+    routes:
+      - type: rewrite              # single-page app: every route serves index.html
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    envVars:
+      - key: NODE_VERSION
+        value: 24.21.0
+      - key: VITE_API_BASE_URL     # https://<api>.onrender.com/api/v1
+        sync: false
