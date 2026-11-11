@@ -1,0 +1,20 @@
+[project]
+name = "sta-api"
+version = "1.0.0"
+description = "Smart Tactical Armor — command & control API (Flask, n-tier)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["migrations"]  # Alembic-generated
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
