@@ -18,9 +18,20 @@ from app.extensions import cors, db, migrate, render_migration_item
 MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
 
 
+def _check_production_settings(app: Flask) -> None:
+    """Fail fast instead of silently running production on unsafe defaults."""
+    if app.config.get("TESTING") or app.config.get("DEBUG"):
+        return
+    if app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
+        raise RuntimeError("DATABASE_URL is not set: refusing to run production on a throwaway SQLite file")
+    if app.config["SECRET_KEY"].startswith("dev-only"):
+        raise RuntimeError("SECRET_KEY is not set: refusing to sign production sessions with the development key")
+
+
 def create_app(config_object=None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_object or get_config())
+    _check_production_settings(app)
     app.url_map.strict_slashes = False
     # Render terminates TLS in front of the app: trust one proxy hop for the
     # client IP / scheme (login rate limiting, absolute URLs in Swagger).
