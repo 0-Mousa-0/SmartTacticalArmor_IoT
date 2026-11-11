@@ -26,6 +26,25 @@ def test_response_without_cid_falls_back_to_latest_of_type(facade, vest, publish
     assert result["status"] == "acknowledged"
 
 
+def test_reply_that_beats_the_send_confirmation_is_not_lost(facade, vest):
+    """Regression (found in the end-to-end run): with a fast broker the vest
+    answered before send_command marked the command 'sent', and the reply was
+    dropped. The publisher below answers *during* publish to force the race."""
+    from app.services.providers import CommandPublisher
+
+    class InstantReplyPublisher(CommandPublisher):
+        def publish_command(self, device_code, message):
+            facade.ingest_command_response(device_code, {"id": device_code, "cmd": message["cmd"], "ok": True,
+                                                         "info": "pong", "cid": message["cid"]})
+            return True
+
+    facade.publisher = InstantReplyPublisher()
+    command = facade.send_command(vest["device_id"], "ping", {}, None)
+    assert command["status"] == "acknowledged"
+    assert command["response_info"] == "pong"
+    assert command["sent_at"] is not None
+
+
 def test_offline_channel_fails_visibly(facade, vest, publisher):
     publisher.succeed = False
     command = facade.send_command(vest["device_id"], "evac", {}, None)

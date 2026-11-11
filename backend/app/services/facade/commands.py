@@ -44,13 +44,17 @@ class CommandFacadeMixin:
 
         with self.transaction():
             command = self.commands.get(command_id)
+            now = utcnow()
+            # A fast vest can answer before we get here: never overwrite a
+            # status the response already set (acknowledged / failed).
             if delivered:
-                command.status = CommandStatus.SENT.value
-                command.sent_at = utcnow()
-            else:
+                command.sent_at = command.sent_at or now
+                if command.status == CommandStatus.QUEUED.value:
+                    command.status = CommandStatus.SENT.value
+            elif command.status == CommandStatus.QUEUED.value:
                 command.status = CommandStatus.FAILED.value
                 command.response_info = "Command channel offline (MQTT not connected)"
-                command.completed_at = utcnow()
+                command.completed_at = now
             result = command.to_dict()
         return result
 
@@ -82,9 +86,13 @@ class CommandFacadeMixin:
             self._mark_seen(device, received_at)
             command = self.commands.get_by_correlation(payload.correlation_id) if payload.correlation_id else None
             if command is None or command.device_id != device.device_id:
-                command = self.commands.latest_sent_of_type(device.device_id, payload.command)
-            if command is None or command.status not in (CommandStatus.SENT.value, CommandStatus.TIMEOUT.value):
+                command = self.commands.latest_open_of_type(device.device_id, payload.command)
+            # QUEUED is accepted too: the reply may beat send_command's own
+            # "mark as sent" step when the broker round trip is very short.
+            answerable = (CommandStatus.QUEUED.value, CommandStatus.SENT.value, CommandStatus.TIMEOUT.value)
+            if command is None or command.status not in answerable:
                 return None
+            command.sent_at = command.sent_at or received_at
             command.status = CommandStatus.ACKNOWLEDGED.value if payload.ok else CommandStatus.FAILED.value
             command.response_ok = payload.ok
             command.response_info = payload.info

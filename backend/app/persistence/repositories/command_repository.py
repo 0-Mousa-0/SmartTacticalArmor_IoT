@@ -18,11 +18,16 @@ class CommandRepository:
     def get_by_correlation(self, correlation_id: str) -> Command | None:
         return db.session.query(Command).filter(Command.correlation_id == correlation_id).first()
 
-    def latest_sent_of_type(self, device_id: str, command_type: str) -> Command | None:
-        """Fallback match for firmware that does not echo ``cid``."""
+    def latest_open_of_type(self, device_id: str, command_type: str) -> Command | None:
+        """Fallback match for firmware that does not echo ``cid``: the newest
+        command of that type still waiting for an answer."""
         return (
             db.session.query(Command)
-            .filter_by(device_id=device_id, command_type=command_type, status=CommandStatus.SENT.value)
+            .filter(
+                Command.device_id == device_id,
+                Command.command_type == command_type,
+                Command.status.in_([CommandStatus.QUEUED.value, CommandStatus.SENT.value]),
+            )
             .order_by(Command.issued_at.desc())
             .first()
         )

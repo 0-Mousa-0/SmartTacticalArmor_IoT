@@ -10,8 +10,11 @@ sample with a z-score against that personal baseline:
 * Direction: temperature only matters when it rises, SpO2 when it drops.
 * ``min_std`` is a noise floor so a very steady signal cannot produce huge
   z-scores from tiny, physically meaningless changes.
-* Anomalous samples update the baseline with a reduced weight, so a short
-  spike does not become the new normal but a lasting change slowly does.
+* Anomalous samples only nudge the mean (at a fifth of the normal rate) and
+  never widen the spread. Letting them inflate the variance would make a
+  sustained abnormal shift look "normal" after ~15 readings; this way it
+  stays flagged for ~150 readings (≈12 min at 5 s) before the baseline
+  accepts it as the wearer's new normal (slow concept drift).
 
 The method is deliberately simple, cheap (O(1) per sample) and explainable:
 every finding can be shown to an operator as "value, usual value, how many
@@ -108,9 +111,13 @@ class AnomalyDetector:
             m2 = state.variance * state.samples + delta * (x - mean)
             state.mean, state.variance, state.samples = mean, m2 / n, n
             return
-        # Exponentially weighted mean / variance (Finch, 2009).
-        alpha = self.alpha * (self.anomaly_weight if is_anomaly else 1.0)
         delta = x - state.mean
-        state.mean += alpha * delta
-        state.variance = (1 - alpha) * (state.variance + alpha * delta * delta)
+        if is_anomaly:
+            # Robust update: drift the mean slowly, keep the spread as learned.
+            state.mean += self.alpha * self.anomaly_weight * delta
+            state.samples += 1
+            return
+        # Exponentially weighted mean / variance (Finch, 2009).
+        state.mean += self.alpha * delta
+        state.variance = (1 - self.alpha) * (state.variance + self.alpha * delta * delta)
         state.samples += 1

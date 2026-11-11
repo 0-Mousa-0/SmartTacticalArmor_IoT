@@ -57,6 +57,19 @@ def test_anomalies_barely_move_the_baseline():
     assert state.mean - before == pytest.approx(0.05 * 0.2 * (40.0 - before))
 
 
+def test_sustained_shift_stays_anomalous_then_becomes_the_new_normal():
+    """Regression (found in the end-to-end run): anomalous samples used to
+    inflate the variance, so a lasting +3.6 °C shift was 'normal' after ~15
+    readings. It must stay flagged for minutes, then adapt (concept drift)."""
+    detector = AnomalyDetector(warmup_samples=20, alpha=0.05)
+    _, state = _warm(detector, "vest_temp_c", [31.0, 31.05, 30.95, 31.0] * 5)
+    shifted = [detector.evaluate("vest_temp_c", 34.6, state) for _ in range(60)]
+    assert all(r.is_anomaly for r in shifted)
+    assert state.std < 0.2  # the learned spread was not inflated by the anomaly
+    later = [detector.evaluate("vest_temp_c", 34.6, state) for _ in range(300)]
+    assert not later[-1].is_anomaly  # eventually accepted as the new normal
+
+
 def test_consecutive_counter_resets():
     detector = AnomalyDetector(warmup_samples=10)
     _, state = _warm(detector, "activity_g", [0.01, 0.02] * 6)
