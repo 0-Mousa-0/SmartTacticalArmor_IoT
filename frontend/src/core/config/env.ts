@@ -1,8 +1,8 @@
 /**
  * Runtime configuration, resolved once from Vite env variables.
  *
- * VITE_API_BASE_URL wins; otherwise VITE_API_HOST (injected by render.yaml
- * from the API service) becomes https://<host>/api/v1; otherwise local dev.
+ * VITE_API_BASE_URL wins; otherwise VITE_API_HOST (just the API's host name)
+ * becomes https://<host>/api/v1; otherwise the local development API.
  */
 function resolveApiBaseUrl(): string {
   const explicit = import.meta.env.VITE_API_BASE_URL?.trim();
