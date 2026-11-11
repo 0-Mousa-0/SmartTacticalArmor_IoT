@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (pytest + ruff)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: pytest
+      - name: Migrations match the models
+        env:
+          FLASK_ENV: development
+          DATABASE_URL: sqlite:///ci.db
+        run: |
+          flask --app wsgi db upgrade
+          flask --app wsgi db check
+
+  frontend:
+    name: Frontend (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  firmware:
+    name: Firmware (logic tests + UNO R4 WiFi build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Host unit tests (safety logic)
+        run: sh firmware/test/run_tests.sh
+      - name: Compile for Arduino UNO R4 WiFi
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: arduino:renesas_uno:unor4wifi
+          platforms: |
+            - name: arduino:renesas_uno
+          libraries: |
+            - name: ArduinoMqttClient
+            - name: ArduinoJson
+          sketch-paths: |
+            - firmware/SmartTacticalArmor
