@@ -1,0 +1,11 @@
+# Ops room account: reads every vest, sends commands
+user ops
+topic read  sta/v1/#
+topic write sta/v1/+/cmd
+
+# Each vest logs in with username = DEVICE_ID and may only use its own topics
+pattern write sta/v1/%u/telemetry
+pattern write sta/v1/%u/alert
+pattern write sta/v1/%u/status
+pattern write sta/v1/%u/resp
+pattern read  sta/v1/%u/cmd

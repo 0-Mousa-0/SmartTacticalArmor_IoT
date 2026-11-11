@@ -1,0 +1,42 @@
+# ── Secrets ──────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+**/arduino_secrets.h
+tools/**/.env
+
+# ── Python ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+instance/
+*.db
+*.sqlite3
+
+# ── Node / frontend ──────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/coverage/
+*.tsbuildinfo
+npm-debug.log*
+
+# ── Firmware host tests ──────────────────────────────────
+firmware/test/build/
+legacy/**/host_test/sim_stage1
+legacy/**/host_test/sim_full
+*.exe
+*.obj
+*.o
+
+# ── Editors / OS ─────────────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.log

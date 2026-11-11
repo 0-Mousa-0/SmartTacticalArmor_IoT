@@ -1,0 +1,9 @@
+# Normalise line endings in the repo; check out with LF everywhere
+# (Render builds on Linux, Arduino IDE handles LF fine on Windows).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.pdf binary
+*.ico binary
+*.woff2 binary
