@@ -63,8 +63,8 @@ flowchart TB
             PPG["Physiological sensor<br/>heart rate + SpO₂ · skin contact<br/>MAX30102 type<br/>planned"]
         end
         BUS{{"I²C bus · 400 kHz<br/>0x68 · 0x57"}}
-        subgraph CTRL["Microcontroller · UNO R4 WiFi"]
-            MCU["Renesas RA4M1<br/>Arm Cortex-M4 · 48 MHz<br/>firmware in C++ (Arduino)<br/>built"]
+        subgraph CTRL["Arduino UNO R4 WiFi"]
+            MCU["Microcontroller · Renesas RA4M1<br/>Arm Cortex-M4 · 48 MHz<br/>firmware in C++ (Arduino)<br/>built"]
             WIFI["ESP32-S3 Wi-Fi module<br/>TCP/IP · TLS · SNTP<br/>built"]
             LED["12×8 LED matrix<br/>status for the wearer<br/>built"]
             MCU -- "internal UART" --- WIFI
