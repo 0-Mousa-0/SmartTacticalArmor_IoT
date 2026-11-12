@@ -11,7 +11,7 @@
 | 07 | [EMQX setup](07-setup-emqx.md) | Create the MQTT broker, accounts and access rules |
 | 08 | [Render deployment](08-deploy-render.md) | Deploy the API and the dashboard from `render.yaml` |
 | 09 | [SCM and QA](09-scm-and-qa.md) | Branching, versioning, configuration, migrations, CI/CD, test strategy, defects, definition of done |
-| 10 | [Technical overview](10-technical-overview.md) | End-to-end block diagram, the protocol on every link, languages, frameworks and versions, hardware, cloud services, security, timing |
+| 10 | [Technical overview](10-technical-overview.md) | Complete end-to-end block diagram with every piece of vest equipment (built and planned), the protocol on every link, languages, frameworks and versions, pin map, cloud services, security, timing |
 
 Component guides: [backend](../backend/README.md) · [frontend](../frontend/README.md) ·
 [firmware](../firmware/README.md) · [simulator](../tools/simulator/README.md) · [end-to-end test](../tools/e2e/README.md)

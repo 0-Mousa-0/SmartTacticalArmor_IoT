@@ -46,7 +46,8 @@ flowchart LR
 | [tools/](tools/simulator/README.md) | Python simulator, end-to-end checker | Speaks the real protocol |
 | [docs/](docs/README.md) | Plan, UML, API, protocol, setup guides | Mermaid diagrams |
 
-The full end-to-end block diagram, with every protocol, language, framework and version, is in
+The complete end-to-end block diagram, with all vest equipment (built and planned) and every protocol,
+language, framework and version, is in
 [docs/10-technical-overview.md](docs/10-technical-overview.md).
 
 ## Try it on your computer (no cloud accounts)
