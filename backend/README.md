@@ -113,5 +113,7 @@ Every setting is an environment variable. `.env.example` lists them all with com
 ## Production
 
 `wsgi.py` is the entry point for gunicorn. `gunicorn.conf.py` runs **one worker with threads** on
-purpose: that worker owns the single MQTT session and the in-memory login limiter. Deployment is described
-in [docs/08-deploy-render.md](../docs/08-deploy-render.md).
+purpose: that worker owns the single MQTT session and the in-memory login limiter. Its `post_worker_init`
+hook starts MQTT ingestion and housekeeping inside the worker, so the app is safe with or without
+`--preload` (Render adds `--preload` by default). Deployment is described in
+[docs/08-deploy-render.md](../docs/08-deploy-render.md).

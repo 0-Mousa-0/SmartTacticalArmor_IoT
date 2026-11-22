@@ -1,8 +1,9 @@
 """Starts the long-running background services of one API process.
 
-Called from ``wsgi.py`` (gunicorn) and ``run.py`` (local dev) — never from
-``create_app()``, so ``flask db upgrade``, tests and CLI commands do not open
-MQTT connections.
+Called from the ``post_worker_init`` hook in ``gunicorn.conf.py`` (inside the
+worker process) and from ``run.py`` (local dev) — never from ``create_app()``
+or ``wsgi.py``, so ``flask db upgrade``, tests, CLI commands and a preloading
+gunicorn master do not open MQTT connections.
 """
 import atexit
 import logging
