@@ -22,6 +22,10 @@ struct AlertContext {
   float tiltDeg;
   float vestTempC;
   bool hasTemp;
+  bool hasHeartRate;
+  float heartRate;
+  bool hasSpo2;
+  float spo2;
 };
 
 enum ConditionChange : uint8_t { CC_NONE = 0, CC_RAISED, CC_ESCALATED, CC_DEESCALATED, CC_REMINDER, CC_CLEARED };

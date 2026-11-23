@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 $sketch = '..\SmartTacticalArmor'
-$sources = @('test_logic.cpp', "$sketch\src\motion\MotionAnalyzer.cpp", "$sketch\src\motion\FallDetector.cpp", "$sketch\src\alerts\AlertManager.cpp")
+$sources = @('test_logic.cpp', "$sketch\src\motion\MotionAnalyzer.cpp", "$sketch\src\motion\FallDetector.cpp", "$sketch\src\alerts\AlertManager.cpp", "$sketch\src\vitals\PulseOximeter.cpp")
 New-Item -ItemType Directory -Force build | Out-Null
 
 if (Get-Command g++ -ErrorAction SilentlyContinue) { & g++ -std=c++17 -Wall -Wextra "-I$sketch" @sources -o build\test_logic.exe }

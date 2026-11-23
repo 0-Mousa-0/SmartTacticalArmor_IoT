@@ -44,4 +44,8 @@ struct AlertMessage {
   float      tiltDeg;    // context snapshot for the operations room
   float      vestTempC;
   bool       hasTemp;
+  bool       hasHeartRate;  // MAX30102 vitals at that moment (when measured)
+  float      heartRate;
+  bool       hasSpo2;
+  float      spo2;
 };

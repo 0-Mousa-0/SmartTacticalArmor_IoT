@@ -25,6 +25,12 @@ size_t buildTelemetry(const char* deviceId, const TelemetrySnapshot& t, char* ou
     imu["posture"] = t.posture;
     imu["still_s"] = t.stillS;
   }
+  if (t.ppgOk) {
+    JsonObject vit = doc["vit"].to<JsonObject>();
+    vit["contact"] = t.skinContact;
+    if (t.hasHeartRate) vit["hr"] = t.heartRate;
+    if (t.hasSpo2) vit["spo2"] = t.spo2;
+  }
   if (t.hasRssi) doc["rssi"] = t.rssi;
   doc["alerts"] = t.alertMask;
   doc["pre"] = t.prealert;
@@ -40,7 +46,7 @@ size_t buildStatus(const char* deviceId, const StatusSnapshot& s, char* out, siz
   doc["rssi"] = s.rssi;
   JsonObject sensors = doc["sensors"].to<JsonObject>();
   sensors["imu"] = s.imuChip;
-  sensors["ppg"] = false;     // Phase 2: MAX30102 heart rate / SpO2
+  sensors["ppg"] = s.ppg;     // MAX30102 heart rate / SpO2
   sensors["temp"] = false;    // Phase 2: MAX30205 skin temperature
   sensors["gps"] = false;     // Phase 3: GPS
   sensors["geiger"] = false;  // Phase 4: radiation
@@ -69,6 +75,8 @@ size_t buildAlert(const char* deviceId, const AlertMessage& m, char* out, size_t
   if (m.epoch) doc["ts"] = m.epoch;
   doc["tilt"] = static_cast<int>(lroundf(m.tiltDeg));
   if (m.hasTemp) doc["vest_t"] = rounded(m.vestTempC, 1);
+  if (m.hasHeartRate) doc["hr"] = static_cast<int>(lroundf(m.heartRate));
+  if (m.hasSpo2) doc["spo2"] = static_cast<int>(lroundf(m.spo2));
   return serializeJson(doc, out, capacity);
 }
 

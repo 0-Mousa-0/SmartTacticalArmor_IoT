@@ -40,15 +40,19 @@ flowchart LR
 
 ## 2. Telemetry: `sta/v1/<id>/telemetry`
 
-Phase 1 (UNO R4 WiFi and MPU-6050) sends this:
+The UNO R4 WiFi with an MPU-6050 and a MAX30102 sends this:
 
 ```json
 {"id":"STA-01","seq":412,"up":2061,"ts":1794432203,"vest_t":33.4,
  "imu":{"peak_g":1.02,"tilt":3,"act":0.012,"posture":"upright","still_s":0},
+ "vit":{"contact":true,"hr":74,"spo2":97},
  "rssi":-58,"alerts":0,"pre":false}
 ```
 
-Later phases add optional sections. The backend already accepts and stores them:
+`vit` is present only when a MAX30102 was found at power-on. `hr` and `spo2` are left out until they
+are measured (about 10 s after a finger is placed) and while nothing touches the sensor (`contact: false`).
+
+Later phases add more optional sections. The backend already accepts and stores them:
 
 ```json
 {"vit":{"hr":82,"spo2":97,"skin_t":36.4,"contact":true},
@@ -72,8 +76,9 @@ Later phases add optional sections. The backend already accepts and stores them:
 | `rssi` | dBm | −127 – 0 | Wi-Fi signal |
 | `alerts` | bitmask | | Conditions active on the vest, see [§ 4](#4-alert-bitmask) |
 | `pre` | bool | | A pre-alert is waiting for the wearer's answer |
-| `vit.hr` / `vit.spo2` / `vit.skin_t` | bpm / % / °C | 20–250 / 50–100 / −10–60 | Phase 2 |
-| `vit.contact` | bool | | Sensor touches the skin (Phase 2) |
+| `vit.hr` / `vit.spo2` | bpm / % | 20–250 / 50–100 | MAX30102 heart rate and blood oxygen |
+| `vit.skin_t` | °C | −10–60 | Phase 2 (MAX30205) |
+| `vit.contact` | bool | | The MAX30102 is covered by a finger or skin |
 | `gps.fix`, `gps.lat`, `gps.lon`, `gps.sat` | | WGS-84 | Phase 3. Position is ignored when `fix` is `false` |
 | `rad.usvh` / `rad.cpm` / `rad.dose` | µSv/h / counts per minute / µSv | ≥ 0 | Phase 4 |
 | `bat.pct` / `bat.v` | % / V | 0–100 / 0–60 | Phase 2 |
@@ -104,7 +109,7 @@ The `state` values follow three patterns:
 |---|---|---|
 | **Pre-alert** | `FALL`, `MAN_DOWN` | `pending` (sev 1, wearer has 10 s) → `cancelled` (short press) **or** `event` (sev 3, nobody answered) |
 | **One-off event** | `SOS`, `IMPACT` | `event` |
-| **Condition** | `NO_MOTION`, `VEST_TEMP_HIGH` and the Phase 2–4 thresholds | `active` (repeated every 30 s, severity may change) → `cleared` |
+| **Condition** | `NO_MOTION`, `VEST_TEMP_HIGH`, `HR_HIGH`, `HR_LOW`, `SPO2_LOW` and the Phase 2–4 thresholds | `active` (repeated every 30 s, severity may change) → `cleared` |
 
 An SOS while a pre-alert is waiting escalates that pre-alert at once.
 
@@ -135,10 +140,12 @@ Example: `"alerts": 32784` = bit 4 + bit 15 = `NO_MOTION` + `VEST_TEMP_HIGH`.
 The vest publishes this on every (re)connect and after `interval` or `silent` changes it:
 
 ```json
-{"id":"STA-01","online":true,"fw":"2.0.0","ip":"192.168.1.23","rssi":-58,
- "sensors":{"imu":"MPU-6050","ppg":false,"temp":false,"gps":false,"geiger":false,"bat":false},
+{"id":"STA-01","online":true,"fw":"2.1.0","ip":"192.168.1.23","rssi":-58,
+ "sensors":{"imu":"MPU-6050","ppg":true,"temp":false,"gps":false,"geiger":false,"bat":false},
  "interval_s":5,"buzzer":true}
 ```
+
+`sensors.ppg` is `true` when the vest found a MAX30102 at power-on.
 
 The vest registers this **Last Will** with the broker when it connects. The broker publishes it if the
 vest disappears without a clean disconnect (power loss, Wi-Fi gone):

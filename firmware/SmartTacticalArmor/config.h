@@ -8,7 +8,7 @@
 // Unique per vest. Must equal: the device code registered in the dashboard
 // (Fleet page) AND the vest's MQTT username in EMQX.
 #define DEVICE_ID               "STA-01"
-#define FW_VERSION              "2.0.0"
+#define FW_VERSION              "2.1.0"
 
 // ---------------- Broker (EMQX Cloud Serverless) ----------------
 // EMQX console -> your deployment -> Overview -> "Address" (MQTT over TLS).
@@ -69,3 +69,26 @@
 #define VEST_T_WARN             45.0f
 #define VEST_T_CRIT             55.0f
 #define VEST_T_PERSIST_MS       5000UL
+
+// ---------------- MAX30102: heart rate + blood oxygen (optional) ----------------
+// Found automatically at power-on (address 0x57); without it the vest simply sends no vitals.
+// Wiring: VIN->3.3V, GND->GND, SDA->SDA, SCL->SCL — the same SDA/SCL pins as the MPU-6050.
+// Not found, or the MPU-6050 vanishes once it is connected? Some modules pull SDA/SCL up to
+// 1.8 V: plug the MAX30102 into the Qwiic connector instead and set PPG_ON_QWIIC 1.
+#define PPG_ON_QWIIC            0
+#define PPG_LED_CURRENT         60            // 0..255 x 0.2 mA = 12 mA; raise it if the IR level stays low
+#define PPG_CONTACT_IR_MIN      50000UL       // IR level that means "finger / skin on the sensor"
+#define PPG_POLL_MS             40UL          // read the FIFO this often (it holds 0.64 s of samples)
+// 1 = SENSOR_OFF info alert when the sensor loses skin contact. Leave 0 for a fingertip
+// sensor on the bench; set 1 once it is fixed against the wearer's skin inside the vest.
+#define PPG_SENSOR_OFF_ALERT    0
+#define PPG_SENSOR_OFF_MS       60000UL
+
+// ---------------- Vital-sign alarms (starting values — tune with test data) ----------------
+#define HR_HIGH_WARN            160
+#define HR_HIGH_CRIT            190
+#define HR_LOW_WARN             45
+#define HR_LOW_CRIT             35
+#define SPO2_WARN               92
+#define SPO2_CRIT               88
+#define VITAL_PERSIST_MS        10000UL       // a vital must stay out of range this long

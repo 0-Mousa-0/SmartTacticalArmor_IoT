@@ -23,6 +23,12 @@ struct TelemetrySnapshot {
   int32_t rssi;
   uint32_t alertMask;
   bool prealert;
+  bool ppgOk;              // MAX30102 fitted: the "vit" section is sent
+  bool skinContact;
+  bool hasHeartRate;       // false = not measured yet (field omitted)
+  int32_t heartRate;
+  bool hasSpo2;
+  int32_t spo2;
 };
 
 struct StatusSnapshot {
@@ -32,6 +38,7 @@ struct StatusSnapshot {
   const char* imuChip;    // "none" when not found
   uint32_t intervalS;
   bool buzzer;
+  bool ppg;               // MAX30102 found
 };
 
 size_t buildTelemetry(const char* deviceId, const TelemetrySnapshot& t, char* out, size_t capacity);

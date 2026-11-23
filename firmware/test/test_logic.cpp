@@ -9,6 +9,8 @@
 #include "src/input/SosButton.h"
 #include "src/motion/FallDetector.h"
 #include "src/motion/MotionAnalyzer.h"
+#include "src/sensors/Max30102Fifo.h"
+#include "src/vitals/PulseOximeter.h"
 
 static int g_checks = 0, g_failures = 0;
 #define CHECK(cond, label)                                                       \
@@ -120,7 +122,7 @@ static void testAlertManager() {
   std::printf("AlertManager\n");
   RecordingSink sink;
   AlertManager a(sink, 30000, 10000);
-  a.setContext({100, 0, 5.0f, 31.0f, true});
+  a.setContext({100, 0, 5.0f, 31.0f, true, false, 0.0f, false, 0.0f});
 
   CHECK(a.condition(AL_VEST_TEMP_HIGH, true, SEV_WARNING, 47, 5000, 1000) == CC_NONE, "condition must persist before alerting");
   CHECK(a.condition(AL_VEST_TEMP_HIGH, true, SEV_WARNING, 47, 5000, 6100) == CC_RAISED, "raised after the persistence time");
@@ -184,11 +186,128 @@ static void testOutboxAndButton() {
   CHECK(longs == 1 && shorts == 0, "2 s hold = one SOS, no short press on release");
 }
 
+// ── MAX30102 + pulse oximetry ──────────────────────────────────────────
+// Synthetic PPG at 50 samples/s: each heartbeat lowers the reflected light
+// (a sharp systolic dip plus a smaller dicrotic wave). The red pulse is
+// `ratio` times the IR pulse relative to its level, so the expected SpO2 is
+// Maxim's curve at that ratio (0.6 -> 96.8 %, 0.8 -> 90.3 %).
+struct PpgSim {
+  float bpm = 72.0f;
+  float ratio = 0.6f;
+  float perfusion = 0.02f;  // IR pulse = 2 % of the IR level
+  float dcIr = 120000.0f, dcRed = 100000.0f;
+  float noise = 0.0f;       // uniform noise, fraction of the level
+  float drift = 0.0f;       // breathing drift (0.25 Hz), fraction of the level
+  uint32_t n = 0;
+  uint32_t seed = 12345;
+
+  float random() {  // -0.5 .. 0.5
+    seed = seed * 1103515245u + 12345u;
+    return static_cast<float>((seed >> 8) & 0xFFFF) / 65535.0f - 0.5f;
+  }
+  static float shape(float phase) {
+    const float a = (phase - 0.18f) / 0.07f, b = (phase - 0.45f) / 0.09f;
+    return std::exp(-a * a) + 0.35f * std::exp(-b * b);
+  }
+  void next(uint32_t& red, uint32_t& ir) {
+    const float t = static_cast<float>(n++) / 50.0f;
+    const float beat = shape(std::fmod(t * bpm / 60.0f, 1.0f));
+    const float level = 1.0f + drift * std::sin(2.0f * 3.14159265f * 0.25f * t);
+    ir = static_cast<uint32_t>(dcIr * level * (1.0f - perfusion * beat) + noise * dcIr * random());
+    red = static_cast<uint32_t>(dcRed * level * (1.0f - perfusion * ratio * beat) + noise * dcRed * random());
+  }
+};
+
+static void feedPpg(PulseOximeter& ox, PpgSim& sim, float seconds) {
+  for (int k = 0; k < static_cast<int>(seconds * 50.0f); k++) {
+    uint32_t red, ir;
+    sim.next(red, ir);
+    ox.addSample(red, ir);
+  }
+}
+
+static void feedNoFinger(PulseOximeter& ox, float seconds) {
+  for (int k = 0; k < static_cast<int>(seconds * 50.0f); k++) ox.addSample(1500 + (k % 7) * 40, 2500 + (k % 5) * 60);
+}
+
+static bool near(float value, float expected, float tolerance) { return std::fabs(value - expected) <= tolerance; }
+
+static void testPulseOximeter() {
+  std::printf("Max30102 FIFO / PulseOximeter\n");
+  const uint8_t bytes[3] = {0xFF, 0x12, 0x34};
+  CHECK(max30102::sample18(bytes) == 0x31234, "18-bit sample keeps bits 17..0 only");
+  CHECK(max30102::pendingSamples(5, 2, 0) == 3, "3 samples waiting");
+  CHECK(max30102::pendingSamples(1, 30, 0) == 3, "pointer wrap-around (30 -> 1)");
+  CHECK(max30102::pendingSamples(7, 7, 0) == 0 && max30102::pendingSamples(7, 7, 4) == 32,
+        "equal pointers: empty, or full after an overflow");
+
+  const PulseOximeter::Config cfg = {50.0f, 50000};
+  {
+    PulseOximeter ox(cfg);
+    feedNoFinger(ox, 10);
+    CHECK(!ox.contact() && !ox.hasHeartRate() && !ox.hasSpo2(), "nothing on the sensor: no contact, no readings");
+  }
+  {
+    PulseOximeter ox(cfg);
+    PpgSim sim;
+    feedPpg(ox, sim, 3);
+    CHECK(ox.contact() && !ox.hasHeartRate(), "finger placed: contact at once, heart rate only after a few beats");
+    feedPpg(ox, sim, 17);
+    std::printf("         72 bpm / R 0.6 -> %.1f bpm, SpO2 %.1f %%\n", ox.heartRate(), ox.spo2());
+    CHECK(ox.hasHeartRate() && near(ox.heartRate(), 72.0f, 2.0f), "72 bpm measured within 2 bpm");
+    CHECK(ox.hasSpo2() && near(ox.spo2(), 96.8f, 1.5f), "SpO2 96.8 % (R = 0.6) within 1.5 %");
+    bool beat = ox.takeBeat();
+    CHECK(beat && !ox.takeBeat(), "takeBeat() reports each beat once");
+
+    feedNoFinger(ox, 1);
+    CHECK(!ox.contact() && !ox.hasHeartRate() && !ox.hasSpo2(), "finger removed: readings cleared within 1 s");
+  }
+  {
+    PulseOximeter ox(cfg);
+    PpgSim sim;
+    sim.bpm = 120.0f;
+    sim.ratio = 0.8f;
+    feedPpg(ox, sim, 20);
+    std::printf("         120 bpm / R 0.8 -> %.1f bpm, SpO2 %.1f %%\n", ox.heartRate(), ox.spo2());
+    CHECK(near(ox.heartRate(), 120.0f, 3.0f), "120 bpm (exertion) within 3 bpm");
+    CHECK(near(ox.spo2(), 90.3f, 2.0f), "low oxygen (90.3 %, R = 0.8) within 2 %");
+  }
+  {
+    PulseOximeter ox(cfg);
+    PpgSim sim;
+    sim.bpm = 45.0f;
+    feedPpg(ox, sim, 25);
+    std::printf("         45 bpm -> %.1f bpm\n", ox.heartRate());
+    CHECK(near(ox.heartRate(), 45.0f, 2.0f), "slow pulse (45 bpm) within 2 bpm, dicrotic wave not counted");
+  }
+  {
+    PulseOximeter ox(cfg);
+    PpgSim sim;
+    sim.bpm = 84.0f;
+    sim.noise = 0.0015f;   // sensor noise
+    sim.drift = 0.004f;    // breathing: 20 % of the pulse size
+    feedPpg(ox, sim, 25);
+    std::printf("         84 bpm + noise + breathing -> %.1f bpm, SpO2 %.1f %%\n", ox.heartRate(), ox.spo2());
+    CHECK(near(ox.heartRate(), 84.0f, 3.0f), "noise and breathing drift: still within 3 bpm");
+    CHECK(near(ox.spo2(), 96.8f, 2.5f), "noise and breathing drift: SpO2 within 2.5 %");
+  }
+  {
+    PulseOximeter ox(cfg);
+    PpgSim sim;
+    feedPpg(ox, sim, 15);
+    ox.markGap();
+    sim.n += 40;  // 0.8 s of samples lost (FIFO overflow during a Wi-Fi reconnect)
+    feedPpg(ox, sim, 5);
+    CHECK(near(ox.heartRate(), 72.0f, 2.0f), "lost samples do not create a false beat interval");
+  }
+}
+
 int main() {
   testFallDetector();
   testMotionAnalyzer();
   testAlertManager();
   testOutboxAndButton();
+  testPulseOximeter();
   std::printf("\n%d checks, %d failed: %s\n", g_checks, g_failures, g_failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
   return g_failures ? 1 : 0;
 }

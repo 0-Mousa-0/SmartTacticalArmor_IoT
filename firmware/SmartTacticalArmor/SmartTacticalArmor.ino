@@ -1,12 +1,13 @@
 /*
  * =====================================================================
  *  SMART TACTICAL ARMOR — vest firmware v2
- *  Phase 1 hardware: Arduino UNO R4 WiFi + MPU-6050 (GY-521)
+ *  Hardware: Arduino UNO R4 WiFi + MPU-6050 (GY-521) + MAX30102 (optional)
  * =====================================================================
- *  Senses (Phase 1)
+ *  Senses
  *    - MPU-6050 accelerometer + gyroscope: fall, hard impact, man down,
  *      posture (tilt), activity, inactivity
  *    - MPU-6050 die temperature: vest / heat-exposure indicator
+ *    - MAX30102 (if connected): heart rate and blood oxygen (SpO2)
  *    - Optional SOS / "I'm OK" button on D4 (a jumper wire to GND works)
  *  Reports to the operations room over MQTT/TLS (EMQX Cloud):
  *    sta/v1/<id>/telemetry  every 5 s (QoS 0)      sta/v1/<id>/alert  events (QoS 1)
@@ -45,15 +46,23 @@
 #include "src/motion/FallDetector.h"
 #include "src/motion/MotionAnalyzer.h"
 #include "src/net/MqttLink.h"
+#include "src/sensors/Max30102.h"
 #include "src/sensors/Mpu6050.h"
 #include "src/ui/Haptics.h"
 #include "src/ui/MatrixFrames.h"
 #include "src/ui/StatusDisplay.h"
+#include "src/vitals/PulseOximeter.h"
 
 #if IMU_ON_QWIIC
 #define SENSOR_WIRE Wire1
 #else
 #define SENSOR_WIRE Wire
+#endif
+
+#if PPG_ON_QWIIC
+#define PPG_WIRE Wire1
+#else
+#define PPG_WIRE Wire
 #endif
 
 #ifdef SECRET_MQTT_CA_CERT
@@ -67,6 +76,8 @@ static const char* const MQTT_CA_CERT = nullptr;  // use the Wi-Fi module's root
 // =====================================================================
 Mpu6050 imu;
 MotionAnalyzer motion({STILL_ACTIVITY_G, STILL_GYRO_DPS, BENT_TILT_DEG, LYING_TILT_DEG});
+Max30102 ppg;
+PulseOximeter oximeter({Max30102::SAMPLE_RATE_HZ, PPG_CONTACT_IR_MIN});
 FallDetector fall({FF_THRESH_G, FF_MIN_MS, FALL_IMPACT_G, FALL_WINDOW_MS, IMPACT_G, POST_IMPACT_CHECK_MS, LYING_TILT_DEG});
 SosButton button(BUTTON_DEBOUNCE_MS, SOS_HOLD_MS);
 Haptics haptics;
@@ -105,8 +116,9 @@ AlertManager alerts(router, ALERT_REMINDER_MS, PREALERT_MS);
 // =====================================================================
 uint32_t telemetryPeriodMs = TELEMETRY_PERIOD_MS;
 uint32_t telemetrySeq = 0;
-uint32_t tImu = 0, tRules = 0, tTelemetry = 0, tUi = 0;
+uint32_t tImu = 0, tRules = 0, tTelemetry = 0, tUi = 0, tPpg = 0;
 bool wearerSaysOk = false;
+bool fingerOn = false;  // last reported MAX30102 contact state (Serial Monitor hint)
 char willPayload[64];
 
 uint32_t uptimeS() { return millis() / 1000UL; }
@@ -131,7 +143,7 @@ void publishStatus() {
   char ip[16];
   link.localIp(ip, sizeof(ip));
   StatusSnapshot status = {FW_VERSION, ip, link.rssi(), imu.ok() ? imu.chipName() : "none",
-                           telemetryPeriodMs / 1000UL, haptics.buzzerEnabled()};
+                           telemetryPeriodMs / 1000UL, haptics.buzzerEnabled(), ppg.ok()};
   char json[320];
   const size_t n = buildStatus(DEVICE_ID, status, json, sizeof(json));
   link.publish("status", json, n, true, 1);  // retained: the backend sees it on (re)connect
@@ -154,6 +166,12 @@ void publishTelemetry(uint32_t nowMs) {
   t.rssi = t.hasRssi ? link.rssi() : 0;
   t.alertMask = alerts.activeMask();
   t.prealert = alerts.prealertActive();
+  t.ppgOk = ppg.ok();
+  t.skinContact = oximeter.contact();
+  t.hasHeartRate = oximeter.hasHeartRate();
+  t.heartRate = static_cast<int32_t>(lroundf(oximeter.heartRate()));
+  t.hasSpo2 = oximeter.hasSpo2();
+  t.spo2 = static_cast<int32_t>(lroundf(oximeter.spo2()));
 
   char json[384];
   const size_t n = buildTelemetry(DEVICE_ID, t, json, sizeof(json));
@@ -256,8 +274,53 @@ void feedbackFor(ConditionChange change, Severity severity) {
   else if (severity == SEV_WARNING) haptics.play(PATTERN_WARN, 1, false, HP_WARN);
 }
 
+// Drains the MAX30102 FIFO (50 samples/s) into the heart-rate / SpO2 analysis.
+void ppgTask() {
+  PpgSample batch[8];
+  for (uint8_t pass = 0; pass < 4; pass++) {  // up to 32 samples = a full FIFO
+    uint8_t lost = 0;
+    const uint8_t n = ppg.read(batch, 8, lost);
+    if (lost) oximeter.markGap();  // the loop was blocked (e.g. Wi-Fi reconnect)
+    for (uint8_t i = 0; i < n; i++) oximeter.addSample(batch[i].red, batch[i].ir);
+    if (n < 8) break;
+  }
+  if (oximeter.contact() != fingerOn) {
+    fingerOn = oximeter.contact();
+    Serial.print(fingerOn ? F("[PPG] finger on the sensor (IR ") : F("[PPG] no finger (IR "));
+    Serial.print(oximeter.irLevel());
+    Serial.println(fingerOn ? F(") — hold still, heart rate in ~10 s") : F(")"));
+  }
+}
+
+// Vital-sign alarms (1 Hz). No contact = nothing measured = no vitals alarm.
+void vitalsRules(uint32_t nowMs) {
+  const bool contact = oximeter.contact();
+#if PPG_SENSOR_OFF_ALERT
+  alerts.condition(AL_SENSOR_OFF, !contact, SEV_INFO, 0, PPG_SENSOR_OFF_MS, nowMs);
+#endif
+  if (!contact) {
+    alerts.condition(AL_HR_HIGH, false, SEV_NONE, 0, 0, nowMs);
+    alerts.condition(AL_HR_LOW, false, SEV_NONE, 0, 0, nowMs);
+    alerts.condition(AL_SPO2_LOW, false, SEV_NONE, 0, 0, nowMs);
+    return;
+  }
+  if (oximeter.hasHeartRate()) {
+    const float hr = oximeter.heartRate();
+    const Severity high = hr >= HR_HIGH_CRIT ? SEV_CRITICAL : (hr >= HR_HIGH_WARN ? SEV_WARNING : SEV_NONE);
+    feedbackFor(alerts.condition(AL_HR_HIGH, high != SEV_NONE, high, hr, VITAL_PERSIST_MS, nowMs), high);
+    const Severity low = hr <= HR_LOW_CRIT ? SEV_CRITICAL : (hr <= HR_LOW_WARN ? SEV_WARNING : SEV_NONE);
+    feedbackFor(alerts.condition(AL_HR_LOW, low != SEV_NONE, low, hr, VITAL_PERSIST_MS, nowMs), low);
+  }
+  if (oximeter.hasSpo2()) {
+    const float spo2 = oximeter.spo2();
+    const Severity low = spo2 < SPO2_CRIT ? SEV_CRITICAL : (spo2 < SPO2_WARN ? SEV_WARNING : SEV_NONE);
+    feedbackFor(alerts.condition(AL_SPO2_LOW, low != SEV_NONE, low, spo2, VITAL_PERSIST_MS, nowMs), low);
+  }
+}
+
 // 1 Hz rules: conditions that hold over time (with persistence + clear).
 void rulesTask(uint32_t nowMs) {
+  if (ppg.ok()) vitalsRules(nowMs);
   if (!imu.ok()) return;
   const uint32_t stillMs = motion.stillMs(nowMs);
   const bool still = stillMs >= INACTIVITY_MS;
@@ -359,18 +422,30 @@ void setup() {
     Serial.println(F("[IMU] NOT FOUND — check wiring and IMU_ON_QWIIC in config.h"));
   }
 
+#if PPG_ON_QWIIC != IMU_ON_QWIIC
+  PPG_WIRE.begin();  // the MAX30102 has its own bus (Qwiic)
+  PPG_WIRE.setClock(I2C_CLOCK_HZ);
+  Mpu6050::scan(PPG_WIRE, Serial);
+#endif
+  if (ppg.begin(PPG_WIRE, PPG_LED_CURRENT)) {
+    Serial.println(F("[PPG] MAX30102 OK — place a fingertip on the sensor"));
+  } else {
+    Serial.println(F("[PPG] MAX30102 not found — heart rate / SpO2 off (optional; see PPG_ON_QWIIC in config.h)"));
+  }
+
   buildWill(DEVICE_ID, willPayload, sizeof(willPayload));
   link.begin(willPayload);
 
   const uint32_t now = millis();
-  tImu = tRules = tTelemetry = tUi = now;
+  tImu = tRules = tTelemetry = tUi = tPpg = now;
   Serial.println(F("[SYS] Ready"));
 }
 
 // Cooperative scheduler: no delay() anywhere in the loop.
 void loop() {
   const uint32_t now = millis();
-  alerts.setContext({uptimeS(), link.epoch(), motion.tiltDeg(), motion.temperatureC(), motion.hasTemperature()});
+  alerts.setContext({uptimeS(), link.epoch(), motion.tiltDeg(), motion.temperatureC(), motion.hasTemperature(),
+                     oximeter.hasHeartRate(), oximeter.heartRate(), oximeter.hasSpo2(), oximeter.spo2()});
 
   link.loop(now);
   if (link.takeJustConnected()) {
@@ -383,6 +458,10 @@ void loop() {
     tImu += IMU_PERIOD_MS;
     if (now - tImu > 100) tImu = now;  // skip the backlog after a blocking network call
     imuTask(now);
+  }
+  if (ppg.ok() && now - tPpg >= PPG_POLL_MS) {  // 50 samples/s buffered in the sensor
+    tPpg = now;
+    ppgTask();
   }
 
   buttonTask(now);

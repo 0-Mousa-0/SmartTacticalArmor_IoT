@@ -21,6 +21,10 @@ void AlertManager::emit(AlertType type, Severity severity, AlertState state, flo
   message.tiltDeg = context_.tiltDeg;
   message.vestTempC = context_.vestTempC;
   message.hasTemp = context_.hasTemp;
+  message.hasHeartRate = context_.hasHeartRate;
+  message.heartRate = context_.heartRate;
+  message.hasSpo2 = context_.hasSpo2;
+  message.spo2 = context_.spo2;
   sink_.onAlert(message);
 }
 
