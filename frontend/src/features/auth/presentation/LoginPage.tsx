@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useI18n } from '@/core/i18n/useI18n';
 import { Button, FormError, Icon, TextField, useErrorMessage } from '@/shared/ui';
 import { useAuth } from '../application/authContext';
+import { SessionSplash } from './SessionSplash';
 import s from './login.module.css';
 
 export function LoginPage() {
@@ -15,10 +16,12 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Signed in already, or public access (no sign-in needed): go to the dashboard.
   if (status === 'authenticated') {
     const from = (location.state as { from?: string } | null)?.from ?? '/';
     return <Navigate to={from} replace />;
   }
+  if (status === 'loading' || status === 'unreachable') return <SessionSplash />;
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();

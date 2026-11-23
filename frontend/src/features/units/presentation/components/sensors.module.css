@@ -59,11 +59,11 @@
 }
 
 .warning {
-  border-color: rgb(245 185 79 / 0.6);
+  border-color: var(--warning-border);
   background: var(--warning-soft);
 }
 
 .critical {
-  border-color: rgb(255 92 108 / 0.7);
+  border-color: var(--critical-border);
   background: var(--critical-soft);
 }

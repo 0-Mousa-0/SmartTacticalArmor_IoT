@@ -182,18 +182,31 @@ export default function SettingsPage() {
     <>
       <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
       <div className={s.grid}>
-        <Card title={t('settings.profile')}>
-          <dl className={uiStyles.kv}>
-            <dt>{t('settings.name')}</dt>
-            <dd>{operator.fullName}</dd>
-            <dt>{t('settings.email')}</dt>
-            <dd className="ltr">{operator.email}</dd>
-            <dt>{t('settings.role')}</dt>
-            <dd>
-              <Badge tone="accent">{t(`settings.roles.${operator.role}`)}</Badge>
-            </dd>
-          </dl>
-        </Card>
+        {operator.isPublic ? (
+          <Card title={t('settings.access')} subtitle={t('settings.publicAccessHint')}>
+            <dl className={uiStyles.kv}>
+              <dt>{t('settings.access')}</dt>
+              <dd>{t('settings.publicAccess')}</dd>
+              <dt>{t('settings.role')}</dt>
+              <dd>
+                <Badge tone="accent">{t(`settings.roles.${operator.role}`)}</Badge>
+              </dd>
+            </dl>
+          </Card>
+        ) : (
+          <Card title={t('settings.profile')}>
+            <dl className={uiStyles.kv}>
+              <dt>{t('settings.name')}</dt>
+              <dd>{operator.fullName}</dd>
+              <dt>{t('settings.email')}</dt>
+              <dd className="ltr">{operator.email}</dd>
+              <dt>{t('settings.role')}</dt>
+              <dd>
+                <Badge tone="accent">{t(`settings.roles.${operator.role}`)}</Badge>
+              </dd>
+            </dl>
+          </Card>
+        )}
 
         <Card title={t('settings.language')} subtitle={t('settings.languageHint')}>
           <SegmentedControl<'ar' | 'en'>
@@ -207,7 +220,7 @@ export default function SettingsPage() {
           />
         </Card>
 
-        <ChangePasswordCard />
+        {!operator.isPublic && <ChangePasswordCard />}
 
         <Card title={t('settings.about')}>
           <dl className={uiStyles.kv}>

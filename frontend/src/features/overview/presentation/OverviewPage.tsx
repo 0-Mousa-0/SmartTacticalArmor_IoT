@@ -1,120 +1,169 @@
+import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useI18n } from '@/core/i18n/useI18n';
 import { AlertItem } from '@/features/alerts/presentation/components/AlertItem';
-import type { SystemHealth } from '@/features/system/domain/SystemHealth';
-import type { Unit } from '@/features/units/domain/Unit';
-import { UnitRiskRow } from '@/features/units/presentation/components/UnitRiskRow';
 import { toMapPoints } from '@/features/units/presentation/presenters';
 import { UnitsMap } from '@/shared/map/UnitsMap';
-import { Badge, Card, EmptyState, ErrorState, Icon, PageHeader, Skeleton, StatTile, RISK_COLOR } from '@/shared/ui';
+import { Card, EmptyState, ErrorState, Icon, RingGauge, Skeleton, type IconName } from '@/shared/ui';
 import { useOverview } from '../application/useOverview';
+import { defaultSelection, stateBreakdown, type UnitState } from '../domain/overviewRules';
+import { FieldForce } from './components/FieldForce';
+import { LiveReadings } from './components/LiveReadings';
+import { STATE_COLOR, STATE_LABEL } from './components/state';
+import { StatusBreakdown, SystemPanel } from './components/Statistics';
 import s from './overview.module.css';
 
-function SystemStatus({ health }: { health: SystemHealth }) {
-  const { t, fmt } = useI18n();
-  const mqtt = health.mqtt;
+interface KpiProps {
+  label: string;
+  value: ReactNode;
+  of?: string;
+  hint?: ReactNode;
+  icon?: IconName;
+  iconColor?: string;
+  gauge?: { value: number; max: number; color: string };
+}
+
+function Kpi({ label, value, of, hint, icon, iconColor, gauge }: KpiProps) {
   return (
-    <dl className={s.status}>
-      <dt>
-        <Icon name="database" size={16} /> {t('overview.database')}
-      </dt>
-      <dd>
-        <Badge tone={health.database === 'ok' ? 'success' : 'critical'} dot>
-          {health.database === 'ok' ? t('overview.connected') : t('overview.disconnected')}
-        </Badge>
-      </dd>
-      <dt>
-        <Icon name="link" size={16} /> {t('overview.broker')}
-      </dt>
-      <dd>
-        {!mqtt.enabled ? (
-          <Badge>{t('overview.disabled')}</Badge>
-        ) : (
-          <Badge tone={mqtt.connected ? 'success' : 'critical'} dot pulse={mqtt.connected}>
-            {mqtt.connected ? t('overview.connected') : t('overview.disconnected')}
-          </Badge>
-        )}
-      </dd>
-      <dt>
-        <Icon name="clock" size={16} /> {t('overview.lastMessage')}
-      </dt>
-      <dd>{fmt.relative(mqtt.lastMessageAt ?? null)}</dd>
-      <dt>
-        <Icon name="activity" size={16} /> {t('overview.messages')}
-      </dt>
-      <dd className="num">{fmt.number(mqtt.messagesReceived ?? null)}</dd>
-    </dl>
+    <div className={s.kpi}>
+      <div className={s.kpiText}>
+        <span className={s.kpiLabel}>{label}</span>
+        <span className={s.kpiValue}>
+          {value}
+          {of && <span className={s.kpiOf}>{of}</span>}
+        </span>
+        {hint && <span className={s.kpiHint}>{hint}</span>}
+      </div>
+      {gauge ? (
+        <RingGauge value={gauge.value} max={gauge.max} color={gauge.color} label={label} />
+      ) : (
+        icon && (
+          <span className={s.kpiIcon} style={iconColor ? { color: iconColor } : undefined}>
+            <Icon name={icon} size={20} />
+          </span>
+        )
+      )}
+    </div>
   );
 }
+
+const LEGEND: UnitState[] = ['normal', 'watch', 'critical', 'offline'];
 
 export default function OverviewPage() {
   const { t, fmt } = useI18n();
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useOverview();
+  const [picked, setPicked] = useState<string | null>(null);
 
   if (isLoading) {
     return (
       <div className={s.loading}>
         <Skeleton height={110} />
-        <Skeleton height={420} />
+        <Skeleton height={560} />
       </div>
     );
   }
   if (error || !data) return <ErrorState error={error} onRetry={() => void refetch()} />;
 
-  const byId = new Map(data.units.map((unit) => [unit.id, unit]));
-  const queue = data.priorityQueue.map((id) => byId.get(id)).filter((unit): unit is Unit => Boolean(unit));
+  const units = data.units;
   const k = data.kpis;
-  const avgLevel = k.riskAverage >= 75 ? 'critical' : k.riskAverage >= 50 ? 'high' : k.riskAverage >= 20 ? 'elevated' : 'normal';
+  const selectedId = picked && units.some((unit) => unit.id === picked) ? picked : defaultSelection(units, data.priorityQueue);
+  const selected = units.find((unit) => unit.id === selectedId) ?? null;
+  const counts = stateBreakdown(units);
+  const anyOnPost = units.some((unit) => unit.position?.source === 'post');
 
   return (
-    <>
-      <PageHeader
-        title={t('overview.title')}
-        subtitle={t('overview.subtitle')}
-        actions={<span className="muted">{t('common.updated', { time: fmt.time(data.generatedAt) })}</span>}
-      />
+    <div className={s.page}>
+      <header className={s.hero}>
+        <div>
+          <h1 className={s.title}>{t('overview.title')}</h1>
+          <p className={s.subtitle}>{t('overview.subtitle')}</p>
+        </div>
+        <div className={s.heroMeta}>
+          <span className={s.livePill}>
+            <span className={s.liveDot} aria-hidden="true" />
+            {t('overview.live')}
+          </span>
+          <span>{t('common.updated', { time: fmt.time(data.generatedAt) })}</span>
+        </div>
+      </header>
 
-      <div className={s.kpis}>
-        <StatTile
-          icon="units"
-          label={t('overview.kpiOnline')}
-          value={<span className="ltr">{`${k.unitsOnline}/${k.unitsTotal}`}</span>}
+      <section className={s.kpis} aria-label={t('overview.title')}>
+        <Kpi
+          label={t('overview.kpiPersonnel')}
+          value={fmt.number(k.personnelAssigned)}
           hint={k.unitsSimulated ? t('overview.kpiSimulated', { n: k.unitsSimulated }) : undefined}
-          color={k.unitsOffline ? 'var(--warning)' : 'var(--success)'}
+          icon="units"
+          iconColor="var(--accent)"
         />
-        <StatTile icon="alert" label={t('overview.kpiCritical')} value={fmt.number(k.alertsCritical)} color={k.alertsCritical ? 'var(--critical)' : undefined} />
-        <StatTile icon="bell" label={t('overview.kpiWarning')} value={fmt.number(k.alertsWarning)} color={k.alertsWarning ? 'var(--warning)' : undefined} />
-        <StatTile icon="clock" label={t('overview.kpiPending')} value={fmt.number(k.alertsPending)} />
-        <StatTile icon="brain" label={t('overview.kpiRisk')} value={fmt.number(k.riskAverage)} color={RISK_COLOR[avgLevel]} hint={`max ${k.riskMax}`} />
-      </div>
+        <Kpi
+          label={t('overview.kpiNormal')}
+          value={fmt.number(counts.normal)}
+          of={t('overview.ofTotal', { n: fmt.number(counts.total) })}
+          gauge={{ value: counts.normal, max: counts.total, color: 'var(--accent)' }}
+        />
+        <Kpi
+          label={t('overview.kpiCriticalAlerts')}
+          value={<span style={k.alertsCritical ? { color: 'var(--critical)' } : undefined}>{fmt.number(k.alertsCritical)}</span>}
+          hint={k.alertsWarning ? t('overview.kpiWarnings', { n: fmt.number(k.alertsWarning) }) : undefined}
+          icon="alert"
+          iconColor={k.alertsCritical ? 'var(--critical)' : undefined}
+        />
+        <Kpi
+          label={t('overview.kpiDevices')}
+          value={<span className="ltr">{fmt.number(k.unitsOnline)}</span>}
+          of={t('overview.ofTotal', { n: fmt.number(k.unitsTotal) })}
+          gauge={{ value: k.unitsOnline, max: k.unitsTotal, color: k.unitsOffline ? 'var(--warning)' : 'var(--accent)' }}
+        />
+      </section>
 
-      <div className={s.grid}>
-        <Card title={t('overview.priorityQueue')} subtitle={t('overview.priorityHint')} flush className={s.queue}>
-          {queue.length ? queue.map((unit, index) => <UnitRiskRow key={unit.id} unit={unit} rank={index + 1} />) : <EmptyState title={t('common.noData')} />}
+      <section className={s.main}>
+        <FieldForce units={units} selectedId={selectedId} onSelect={setPicked} />
+
+        <Card title={t('overview.mapTitle')} actions={<Link to="/map">{t('nav.map')}</Link>} flush className={s.mapCard}>
+          <div className={s.mapBody}>
+            <UnitsMap
+              points={toMapPoints(units)}
+              height="100%"
+              selectedId={selectedId}
+              onSelect={setPicked}
+              showLabels
+              fitToPoints
+              keepInitialView
+            />
+            {anyOnPost && <span className={s.mapNote}>{t('map.postNote')}</span>}
+            <div className={s.legend} aria-hidden="true">
+              {LEGEND.map((state) => (
+                <span key={state} className={s.legendItem}>
+                  <span className={s.legendDot} style={{ background: STATE_COLOR[state] }} />
+                  {t(STATE_LABEL[state])}
+                </span>
+              ))}
+            </div>
+          </div>
         </Card>
 
+        <LiveReadings unit={selected} />
+      </section>
+
+      <section className={s.bottom}>
         <Card
-          title={t('overview.incidents')}
+          title={t('overview.eventLog')}
           actions={<Link to="/alerts">{t('overview.viewAll')}</Link>}
           flush
-          className={s.incidents}
+          className={s.log}
         >
-          {data.alerts.length ? (
-            data.alerts.map((alert) => <AlertItem key={alert.id} alert={alert} onSelect={() => navigate(`/alerts?focus=${alert.id}`)} />)
-          ) : (
-            <EmptyState icon="shield" title={t('overview.noIncidents')} />
-          )}
+          <div className={s.logList}>
+            {data.alerts.length ? (
+              data.alerts.map((alert) => <AlertItem key={alert.id} alert={alert} onSelect={() => navigate(`/alerts?focus=${alert.id}`)} />)
+            ) : (
+              <EmptyState icon="shield" title={t('overview.noEvents')} />
+            )}
+          </div>
         </Card>
-
-        <Card title={t('overview.map')} actions={<Link to="/map">{t('nav.map')}</Link>} flush className={s.map}>
-          <UnitsMap points={toMapPoints(data.units)} height={340} onSelect={(id) => navigate(`/units/${id}`)} zoom={10} />
-        </Card>
-
-        <Card title={t('overview.system')} className={s.system}>
-          <SystemStatus health={data.system} />
-        </Card>
-      </div>
-    </>
+        <StatusBreakdown units={units} />
+        <SystemPanel health={data.system} />
+      </section>
+    </div>
   );
 }

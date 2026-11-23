@@ -58,15 +58,16 @@ copy .env.example .env.local     # VITE_API_BASE_URL=http://localhost:5000/api/v
 npm run dev                      # http://localhost:5173
 ```
 
-Start the backend first ([backend/README.md](../backend/README.md)). Sign in with an account created by
-`create-operator` or the bootstrap administrator.
+Start the backend first ([backend/README.md](../backend/README.md)). If the API runs with
+`PUBLIC_ACCESS_ROLE` set, the dashboard opens directly on the command overview. Otherwise sign in with an
+account created by `create-operator` or the bootstrap administrator.
 
 | Script | Does |
 |---|---|
 | `npm run dev` | Development server with hot reload |
 | `npm run lint` | ESLint, including the architecture layer rules |
 | `npm run typecheck` | TypeScript project build, no output |
-| `npm test` | Vitest and Testing Library (17 tests) |
+| `npm test` | Vitest and Testing Library (27 tests) |
 | `npm run build` | Type check, then the production build in `dist/` |
 | `npm run preview` | Serve the production build locally |
 
@@ -85,9 +86,15 @@ Start the backend first ([backend/README.md](../backend/README.md)). Sign in wit
   dictionary is typed from the English one, so a missing translation is a type error. Use logical CSS
   properties (`margin-inline-start`) so that layouts mirror correctly in RTL.
 * **Roles:** actions a role cannot perform are hidden. The API enforces the same rules.
-* **Map:** OpenStreetMap tiles, darkened with a CSS filter. No API key is needed.
-* **Errors:** API errors become friendly, translated messages (`shared/ui/errors.tsx`, `useErrorMessage`), and a `401` returns
-  to the login page.
+* **Look:** every colour, radius and font comes from `src/core/styles/tokens.css` (charcoal surfaces, mint
+  signal colour, orange and red for danger, the active choice as a white pill). Components never hard-code
+  colours. The menu is one bar across the top; below 1200 px it folds into a menu button.
+* **Map:** OpenStreetMap tiles turned charcoal with a CSS filter. No API key is needed. Units are round
+  badges: shield = normal, "!" = under watch, triangle = critical, × = offline.
+* **Sign-in:** at start-up the dashboard asks `/auth/me` who it is. A public-access visitor goes straight in,
+  `401` shows the sign-in page, and an API that is still waking up gets an automatic retry.
+* **Errors:** API errors become friendly, translated messages (`shared/ui/errors.tsx`, `useErrorMessage`), and a `401`
+  on a signed-in session returns to the sign-in page.
 
 ## Adding a page
 

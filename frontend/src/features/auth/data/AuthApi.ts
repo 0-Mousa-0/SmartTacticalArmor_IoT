@@ -3,13 +3,15 @@ import type { Role } from '@/shared/domain/types';
 import type { AuthRepository, Operator, Session } from '../domain/Operator';
 
 export interface OperatorDto {
-  operator_id: string;
+  operator_id: string | null;
   full_name: string;
-  email: string;
+  email: string | null;
   role: Role;
   is_active: boolean;
   last_login_at: string | null;
   created_at: string | null;
+  /** Only /auth/me without a session, when the API allows public access. */
+  public?: boolean;
 }
 
 interface LoginResponseDto {
@@ -19,13 +21,14 @@ interface LoginResponseDto {
 }
 
 export const toOperator = (dto: OperatorDto): Operator => ({
-  id: dto.operator_id,
+  id: dto.operator_id ?? '',
   fullName: dto.full_name,
-  email: dto.email,
+  email: dto.email ?? '',
   role: dto.role,
   isActive: dto.is_active,
   lastLoginAt: dto.last_login_at,
   createdAt: dto.created_at,
+  isPublic: dto.public === true,
 });
 
 export class AuthApi implements AuthRepository {
@@ -36,6 +39,7 @@ export class AuthApi implements AuthRepository {
     return { token: dto.access_token, expiresInSeconds: dto.expires_in, operator: toOperator(dto.operator) };
   }
 
+  /** The signed-in operator, or the public-access visitor; 401 = sign-in required. */
   async me(): Promise<Operator> {
     return toOperator(await this.http.get<OperatorDto>('/auth/me'));
   }

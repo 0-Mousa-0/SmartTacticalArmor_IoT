@@ -4,6 +4,17 @@ import type { Unit } from './Unit';
 
 export const unitLabel = (unit: Unit): string => unit.wearer?.callsign ?? unit.code;
 
+/** Where a unit stands right now: one scheme for the map, lists and statistics. */
+export type UnitState = 'critical' | 'watch' | 'normal' | 'offline' | 'never';
+
+export function unitState(unit: Unit): UnitState {
+  if (unit.connection === 'never') return 'never';
+  if (unit.connection !== 'online') return 'offline';
+  if (unit.risk.level === 'critical' || unit.openAlerts.some((alert) => alert.severity === 'critical')) return 'critical';
+  if (unit.risk.level !== 'normal' || unit.openAlerts.length > 0) return 'watch';
+  return 'normal';
+}
+
 export const isAtRisk = (unit: Unit): boolean =>
   unit.risk.level === 'high' || unit.risk.level === 'critical' || unit.openAlerts.some((a) => a.severity === 'critical');
 

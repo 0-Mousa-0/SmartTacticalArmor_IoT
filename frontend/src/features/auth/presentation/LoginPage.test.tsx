@@ -9,6 +9,9 @@ import { ApiError } from '@/core/http/ApiError';
 import type { AuthRepository } from '../domain/Operator';
 import { LoginPage } from './LoginPage';
 
+/** The API answers /auth/me with 401: sign-in is required (no public access). */
+const signInRequired = () => vi.fn().mockRejectedValue(new ApiError(401, 'Missing or malformed Authorization header'));
+
 /** Clean architecture in practice: the page runs against a fake repository. */
 function renderLogin(auth: AuthRepository) {
   const dependencies = { auth } as unknown as Dependencies;
@@ -32,14 +35,14 @@ describe('LoginPage', () => {
       login: vi.fn().mockResolvedValue({
         token: 'jwt',
         expiresInSeconds: 3600,
-        operator: { id: 'o1', fullName: 'Duty Officer', email: 'ops@sta.test', role: 'operator', isActive: true, lastLoginAt: null, createdAt: null },
+        operator: { id: 'o1', fullName: 'Duty Officer', email: 'ops@sta.test', role: 'operator', isActive: true, lastLoginAt: null, createdAt: null, isPublic: false },
       }),
-      me: vi.fn(),
+      me: signInRequired(),
       changePassword: vi.fn(),
     };
     renderLogin(auth);
 
-    await userEvent.type(screen.getByLabelText('Email'), 'ops@sta.test');
+    await userEvent.type(await screen.findByLabelText('Email'), 'ops@sta.test');
     await userEvent.type(screen.getByLabelText('Password'), 'secret-123');
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
@@ -51,12 +54,12 @@ describe('LoginPage', () => {
   it('shows the server message when credentials are rejected', async () => {
     const auth: AuthRepository = {
       login: vi.fn().mockRejectedValue(new ApiError(401, 'Invalid email or password')),
-      me: vi.fn(),
+      me: signInRequired(),
       changePassword: vi.fn(),
     };
     renderLogin(auth);
 
-    await userEvent.type(screen.getByLabelText('Email'), 'ops@sta.test');
+    await userEvent.type(await screen.findByLabelText('Email'), 'ops@sta.test');
     await userEvent.type(screen.getByLabelText('Password'), 'wrong-pass');
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 

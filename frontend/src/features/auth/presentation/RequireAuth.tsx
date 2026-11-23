@@ -1,20 +1,16 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useI18n } from '@/core/i18n/useI18n';
 import { useAuth } from '../application/authContext';
+import { SessionSplash } from './SessionSplash';
 
-/** Route guard: only signed-in operators reach the dashboard. */
+/**
+ * Route guard. In public-access mode the API itself lets visitors in, so the
+ * dashboard opens directly; the sign-in page is only used when the API asks for it.
+ */
 export function RequireAuth() {
   const { status } = useAuth();
-  const { t } = useI18n();
   const location = useLocation();
 
-  if (status === 'loading') {
-    return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--text-muted)' }}>
-        {t('common.loading')}
-      </div>
-    );
-  }
+  if (status === 'loading' || status === 'unreachable') return <SessionSplash />;
   if (status === 'anonymous') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }

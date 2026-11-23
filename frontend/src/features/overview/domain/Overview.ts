@@ -3,6 +3,7 @@ import type { SystemHealth } from '@/features/system/domain/SystemHealth';
 import type { Unit } from '@/features/units/domain/Unit';
 
 export interface Kpis {
+  personnelAssigned: number;
   unitsTotal: number;
   unitsOnline: number;
   unitsOffline: number;

@@ -16,15 +16,32 @@ export function TrendCharts({ unitId, minutes, zThreshold = 3 }: { unitId: strin
     activity: p.activityG,
     peak: p.peakG,
     anomaly: p.anomalyScore,
+    hr: p.heartRate,
+    spo2: p.spo2,
   }));
+  const hasVitals = data.some((p) => p.heartRate !== null || p.spo2 !== null);
 
   return (
     <div className={s.charts}>
+      {hasVitals && (
+        <div className={s.chartWide}>
+          <p className={s.chartTitle}>{t('unit.vitalsChart')}</p>
+          <TimeSeriesChart
+            data={points}
+            height={200}
+            series={[
+              { key: 'hr', label: t('sensors.heartRate'), color: 'var(--chart-5)' },
+              { key: 'spo2', label: t('sensors.spo2'), color: 'var(--chart-3)' },
+            ]}
+            decimals={0}
+          />
+        </div>
+      )}
       <div>
         <p className={s.chartTitle}>{t('unit.temperatureChart')}</p>
         <TimeSeriesChart
           data={points}
-          series={[{ key: 'temp', label: t('sensors.vestTemp'), color: '#ff9f43' }]}
+          series={[{ key: 'temp', label: t('sensors.vestTemp'), color: 'var(--chart-2)' }]}
           unit="°"
           decimals={1}
           domain={['dataMin - 0.5', 'dataMax + 0.5']}
@@ -35,8 +52,8 @@ export function TrendCharts({ unitId, minutes, zThreshold = 3 }: { unitId: strin
         <TimeSeriesChart
           data={points}
           series={[
-            { key: 'activity', label: t('unit.activity'), color: '#35d0ba' },
-            { key: 'peak', label: t('unit.peak'), color: '#5aa9ff', dashed: true },
+            { key: 'activity', label: t('unit.activity'), color: 'var(--chart-1)' },
+            { key: 'peak', label: t('unit.peak'), color: 'var(--chart-3)', dashed: true },
           ]}
         />
       </div>
@@ -45,10 +62,10 @@ export function TrendCharts({ unitId, minutes, zThreshold = 3 }: { unitId: strin
         <TimeSeriesChart
           data={points}
           height={170}
-          series={[{ key: 'anomaly', label: '|z|', color: '#a78bfa' }]}
+          series={[{ key: 'anomaly', label: '|z|', color: 'var(--chart-4)' }]}
           domain={[0, 'auto']}
           decimals={1}
-          threshold={{ value: zThreshold, label: `z = ${zThreshold}`, color: '#ff5c6c' }}
+          threshold={{ value: zThreshold, label: `z = ${zThreshold}`, color: 'var(--chart-5)' }}
         />
       </div>
     </div>

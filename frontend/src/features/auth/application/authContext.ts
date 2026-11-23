@@ -1,13 +1,20 @@
 import { createContext, useContext } from 'react';
 import type { Operator } from '../domain/Operator';
 
-export type AuthStatus = 'loading' | 'authenticated' | 'anonymous';
+/**
+ * loading      — asking the API who we are (it may be waking up)
+ * authenticated — a signed-in operator, or a public-access visitor (operator.isPublic)
+ * anonymous    — the API requires sign-in
+ * unreachable  — the API did not answer; retried automatically
+ */
+export type AuthStatus = 'loading' | 'authenticated' | 'anonymous' | 'unreachable';
 
 export interface AuthState {
   status: AuthStatus;
   operator: Operator | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  retry: () => void;
 }
 
 export const AuthContext = createContext<AuthState | null>(null);

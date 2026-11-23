@@ -8,6 +8,8 @@ export interface Operator {
   isActive: boolean;
   lastLoginAt: string | null;
   createdAt: string | null;
+  /** Anonymous visitor: the API runs in public-access mode (no sign-in). */
+  isPublic: boolean;
 }
 
 export interface Session {

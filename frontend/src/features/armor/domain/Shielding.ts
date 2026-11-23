@@ -42,7 +42,7 @@ export interface ArmorRepository {
 }
 
 export const MATERIAL_COLORS: Record<Material, string> = {
-  bi2o3: '#35d0ba',
-  pbo: '#f5b94f',
-  mgo: '#a78bfa',
+  bi2o3: '#34d9a5',
+  pbo: '#f5903d',
+  mgo: '#a99bff',
 };

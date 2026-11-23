@@ -26,7 +26,7 @@ export function TimeSeriesChart({ data, series, height = 220, unit, domain = ['a
     <div dir="ltr" style={{ width: '100%', height }}>
       <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke="var(--border)" strokeDasharray="3 4" vertical={false} />
+          <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="2 5" vertical={false} />
           <XAxis
             dataKey="t"
             tickFormatter={(value: string) => fmt.time(value).slice(0, 5)}
@@ -43,7 +43,7 @@ export function TimeSeriesChart({ data, series, height = 220, unit, domain = ['a
             allowDecimals
           />
           <Tooltip
-            contentStyle={{ background: 'var(--surface-2)', border: '1px solid var(--border-strong)', borderRadius: 8, color: 'var(--text)' }}
+            contentStyle={{ background: 'var(--surface-2)', border: '1px solid var(--border-strong)', borderRadius: 12, color: 'var(--text)' }}
             labelFormatter={(value: string) => fmt.time(value)}
             formatter={(value: number, name: string) => [`${typeof value === 'number' ? value.toFixed(2) : value}${unit ?? ''}`, name]}
           />
@@ -58,7 +58,7 @@ export function TimeSeriesChart({ data, series, height = 220, unit, domain = ['a
               dataKey={item.key}
               name={item.label}
               stroke={item.color}
-              strokeWidth={2}
+              strokeWidth={1.8}
               strokeDasharray={item.dashed ? '5 4' : undefined}
               dot={false}
               isAnimationActive={false}

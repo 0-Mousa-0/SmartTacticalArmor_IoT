@@ -8,4 +8,5 @@ export { useToast } from './toastContext';
 export { ErrorState } from './errors';
 export { useErrorMessage } from './useErrorMessage';
 export { RISK_COLOR } from './riskColors';
+export { RingGauge } from './RingGauge';
 export { AlertStatusBadge, ConnectionPill, RiskBadge, RiskMeter, SeverityBadge, SimulatedBadge, SourceBadge } from './status';

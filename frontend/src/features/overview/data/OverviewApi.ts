@@ -22,6 +22,7 @@ export class OverviewApi implements OverviewRepository {
     return {
       generatedAt: dto.generated_at,
       kpis: {
+        personnelAssigned: k.personnel_assigned ?? 0,
         unitsTotal: k.units_total ?? 0,
         unitsOnline: k.units_online ?? 0,
         unitsOffline: k.units_offline ?? 0,

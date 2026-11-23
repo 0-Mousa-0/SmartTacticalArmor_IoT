@@ -18,6 +18,7 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 14px;
+  font-weight: 350;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -28,6 +29,11 @@ h3,
 h4,
 p {
   margin: 0;
+}
+
+strong,
+b {
+  font-weight: 600;
 }
 
 a {
@@ -66,18 +72,6 @@ textarea {
   --dir-flip: -1;
 }
 
-/* Pulsing ring on map markers that need attention */
-.map-pulse {
-  animation: map-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes map-pulse {
-  50% {
-    stroke-opacity: 0.25;
-    fill-opacity: 0.45;
-  }
-}
-
 /* Numbers, codes and coordinates read left-to-right even in Arabic. */
 .ltr {
   direction: ltr;
@@ -106,27 +100,35 @@ textarea {
   white-space: nowrap;
 }
 
-/* Leaflet: dark popups / tooltips that match the theme */
+/* ── Leaflet: the operational map in the Dera identity ─────── */
 .leaflet-container {
-  background: #0b1422;
+  background: #101112;
   font-family: var(--font-sans);
 }
 
-/* OpenStreetMap tiles turned into a dark basemap (no third-party API key). */
+/* OpenStreetMap tiles turned into a charcoal basemap with a faint mint
+   tint (no third-party API key). Slightly see-through, so the dotted
+   texture of the map background shows under the streets. */
 .map-tiles-dark {
-  filter: invert(100%) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.35);
+  filter: invert(100%) grayscale(100%) brightness(0.62) contrast(1.18) sepia(0.22) hue-rotate(118deg) saturate(1.4);
+  opacity: 0.9;
+}
+
+.leaflet-container.map-dots {
+  background: var(--dots), #101112;
 }
 
 /* Higher specificity than leaflet.css, which is loaded after this file. */
 .leaflet-container .leaflet-popup-content-wrapper,
 .leaflet-container .leaflet-popup-tip,
 .leaflet-container .leaflet-tooltip {
-  background: var(--surface-2);
+  background: var(--glass);
+  backdrop-filter: blur(8px);
   color: var(--text);
   border: 1px solid var(--border-strong);
-  box-shadow: var(--shadow);
-  border-radius: 6px;
-  padding: 2px 7px;
+  box-shadow: none;
+  border-radius: var(--radius-pill);
+  padding: 2px 9px;
 }
 
 .leaflet-container .leaflet-tooltip::before {
@@ -134,18 +136,79 @@ textarea {
 }
 
 .leaflet-control-attribution {
-  background: rgb(7 13 24 / 0.75) !important;
+  background: rgb(13 14 15 / 0.75) !important;
   color: var(--text-faint) !important;
+  border-radius: var(--radius-pill) 0 0 0;
 }
 
 .leaflet-control-attribution a {
   color: var(--text-muted) !important;
 }
 
-.leaflet-bar a {
-  background: var(--surface-2);
+.leaflet-container .leaflet-bar {
+  border: 0;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.leaflet-container .leaflet-bar a {
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  background: var(--glass);
+  backdrop-filter: blur(8px);
   color: var(--text);
   border-color: var(--border);
+}
+
+.leaflet-container .leaflet-bar a:hover {
+  background: var(--surface-3);
+}
+
+/* Unit markers: a round badge with a status icon (see UnitsMap). */
+.unit-marker {
+  background: none;
+  border: 0;
+}
+
+.unit-marker__badge {
+  --marker: var(--accent);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--marker);
+  background: color-mix(in srgb, var(--marker) 20%, #121314);
+  border: 1.5px solid var(--marker);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--marker) 14%, transparent);
+  transition: transform 0.15s;
+}
+
+.unit-marker__badge svg {
+  width: 15px;
+  height: 15px;
+}
+
+.unit-marker--approx .unit-marker__badge {
+  border-style: dashed;
+}
+
+.unit-marker--selected .unit-marker__badge {
+  transform: scale(1.18);
+  border-color: var(--pill-active-bg);
+  box-shadow: 0 0 0 5px rgb(242 243 243 / 0.18);
+}
+
+.unit-marker--pulse .unit-marker__badge {
+  animation: marker-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes marker-pulse {
+  50% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--marker) 0%, transparent);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

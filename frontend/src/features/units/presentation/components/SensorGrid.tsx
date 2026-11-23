@@ -46,6 +46,8 @@ export function SensorGrid({ unit }: { unit: Unit }) {
   const phase = (sensor: OptionalSensor) => (hasSensor(unit, sensor) ? undefined : SENSOR_PHASE[sensor]);
   const temp = tm?.vestTempC ?? null;
   const still = tm?.stillS ?? null;
+  // The MAX30102 reports no values while nothing touches it.
+  const vitalsHint = tm?.sensorContact === false ? t('sensors.noContact') : undefined;
 
   return (
     <div className={s.grid}>
@@ -69,8 +71,8 @@ export function SensorGrid({ unit }: { unit: Unit }) {
       <Tile icon="clock" label={t('sensors.still')} value={fmt.duration(still)} tone={still !== null && still >= 60 ? 'warning' : 'normal'} />
       <Tile icon="wifi" label={t('sensors.signal')} value={fmt.number(tm?.rssi ?? unit.rssi)} unit="dBm" />
 
-      <Tile icon="heart" label={t('sensors.heartRate')} value={fmt.number(tm?.heartRate)} unit="bpm" missingPhase={phase('heartRate')} />
-      <Tile icon="droplet" label={t('sensors.spo2')} value={fmt.number(tm?.spo2)} unit="%" missingPhase={phase('spo2')} />
+      <Tile icon="heart" label={t('sensors.heartRate')} value={fmt.number(tm?.heartRate)} unit="bpm" hint={vitalsHint} missingPhase={phase('heartRate')} />
+      <Tile icon="droplet" label={t('sensors.spo2')} value={fmt.number(tm?.spo2)} unit="%" hint={vitalsHint} missingPhase={phase('spo2')} />
       <Tile icon="thermometer" label={t('sensors.skinTemp')} value={fmt.number(tm?.skinTempC, 1)} unit="°C" missingPhase={phase('skinTemp')} />
       <Tile
         icon="pin"

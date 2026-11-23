@@ -27,6 +27,8 @@ export interface LiveTelemetry {
   prealert: boolean;
   heartRate: number | null;
   spo2: number | null;
+  /** MAX30102 touching skin (null = no vitals sensor) */
+  sensorContact: boolean | null;
   skinTempC: number | null;
   lat: number | null;
   lng: number | null;

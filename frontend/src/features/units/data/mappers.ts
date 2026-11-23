@@ -28,6 +28,7 @@ export interface TelemetrySnapshotDto {
   prealert?: boolean;
   heart_rate?: number | null;
   spo2?: number | null;
+  sensor_contact?: boolean | null;
   skin_temp_c?: number | null;
   lat?: number | null;
   lng?: number | null;
@@ -99,6 +100,7 @@ export function toTelemetry(dto: TelemetrySnapshotDto | null): LiveTelemetry | n
     prealert: Boolean(dto.prealert),
     heartRate: num(dto.heart_rate),
     spo2: num(dto.spo2),
+    sensorContact: typeof dto.sensor_contact === 'boolean' ? dto.sensor_contact : null,
     skinTempC: num(dto.skin_temp_c),
     lat: num(dto.lat),
     lng: num(dto.lng),
