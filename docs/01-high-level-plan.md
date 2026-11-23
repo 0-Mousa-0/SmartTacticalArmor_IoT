@@ -185,9 +185,9 @@ sensor only means adding its firmware module.
 | Same suite on PostgreSQL | `TEST_DATABASE_URL=postgresql://… pytest` | **passed** (verified on a Postgres server) |
 | Migrations match the models; RLS applied | `flask db upgrade && flask db check` | **no drift** |
 | Backend lint | `ruff check .` | **clean** |
-| Frontend lint (incl. layer rules), types, tests, build | `npm run lint && npm test && npm run build` | **17 passed, 0 warnings** |
-| Firmware logic | `firmware/test/run_tests.sh` | **49 checks passed** |
-| Firmware build for the board | `arduino-cli compile --fqbn arduino:renesas_uno:unor4wifi` | **0 warnings**, 38 % flash, 35 % RAM |
+| Frontend lint (incl. layer rules), types, tests, build | `npm run lint && npm test && npm run build` | **27 passed, 0 warnings** |
+| Firmware logic | `firmware/test/run_tests.sh` | **65 checks passed** |
+| Firmware build for the board | `arduino-cli compile --fqbn arduino:renesas_uno:unor4wifi` | **0 warnings**, 40 % flash, 36 % RAM |
 | End-to-end over MQTT | `tools/e2e/README.md` | **18 / 18 passed** |
 | Visual QA | headless browser screenshots, AR/EN, desktop + phone | reviewed |
 

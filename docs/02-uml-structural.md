@@ -70,7 +70,7 @@ flowchart TB
 
 | Node | Runtime | Notes |
 |---|---|---|
-| Smart vest | Arduino C++17 (Renesas core 1.6) | 101 KB flash, 11.7 KB RAM |
+| Smart vest | Arduino C++17 (Renesas core 1.6) | 106 KB flash, 12.1 KB RAM |
 | EMQX Cloud | Managed MQTT 5 / 3.1.1 broker | TLS only; free 1 GB/month |
 | Render web service | Python 3.12, gunicorn 27, Flask 3.1 | Migrations run at start; health check `/api/v1/health` |
 | Render static site | Vite build of React 18 | SPA rewrite `/* → /index.html` |

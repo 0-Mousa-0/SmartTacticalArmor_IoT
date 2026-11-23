@@ -298,7 +298,7 @@ Full message formats: [MQTT protocol](05-mqtt-protocol.md).
 |---|---|
 | Style | REST, resource URLs under `/api/v1`, JSON bodies, standard status codes |
 | Authentication | `POST /auth/login` returns a **JWT** (HS256, 8 h). It is sent as `Authorization: Bearer …` |
-| Authorization | Roles `viewer`, `operator` and `admin`, checked on every endpoint |
+| Authorization | Roles `viewer`, `operator` and `admin`, checked on every endpoint. Optional public access (`PUBLIC_ACCESS_ROLE`) gives visitors without a token one fixed role |
 | Documentation | Swagger UI at `/api/v1/docs`, generated from the code by flask-restx |
 | Cross-origin | CORS allows only the dashboard's origin (`CORS_ORIGINS`) |
 | Live updates | The dashboard polls with TanStack Query every 3–15 s, depending on the page |
@@ -400,7 +400,7 @@ English) without an i18n framework.
 
 | Equipment | Part | Measures / does | Interface | Status |
 |---|---|---|---|---|
-| **Microcontroller** | **Arduino UNO R4 WiFi**: Renesas RA4M1 (Arm Cortex-M4F, 48 MHz, 256 KB flash, 32 KB RAM), an ESP32-S3 Wi-Fi module and a 12×8 LED matrix | Collects sensor data, runs the alert logic, sends it over Wi-Fi with TLS, shows status to the wearer. The firmware uses 38 % of flash and 35 % of RAM | | Built |
+| **Microcontroller** | **Arduino UNO R4 WiFi**: Renesas RA4M1 (Arm Cortex-M4F, 48 MHz, 256 KB flash, 32 KB RAM), an ESP32-S3 Wi-Fi module and a 12×8 LED matrix | Collects sensor data, runs the alert logic, sends it over Wi-Fi with TLS, shows status to the wearer. The firmware uses 40 % of flash and 36 % of RAM | | Built |
 | **Motion sensor** | **MPU-6050** (GY-521 board) | 3-axis accelerometer (±16 g) and 3-axis gyroscope (±2000 °/s): falls, impacts, posture, activity, stillness | I²C `0x68` | Built |
 | **Temperature** | The MPU-6050's on-chip temperature sensor | Vest / environment temperature. It reads a few °C above the air because the chip warms itself, so it is not body temperature | Same chip, same I²C read | Built |
 | **Physiological sensor** | Heart rate + SpO₂ module (MAX30102 type) | Heart rate (bpm), blood oxygen (%), skin contact | I²C `0x57` | Planned |
@@ -482,7 +482,7 @@ migrations create the database schema, and `.github/workflows/ci.yml` defines th
 | Camera node → backend *(planned)* | HTTPS only, with a per-device upload token that can only add snapshots for its own vest |
 | Broker ↔ backend | TLS with certificate verification (certifi). A dedicated `sta-backend` account |
 | Backend input | Every MQTT message is validated: the `id` must match the topic, values must be within physical ranges, and unknown vests are rejected |
-| Browser ↔ API | HTTPS only. JWT sessions that expire after 8 h. Role checks on every endpoint. Login lockout after 5 failures. CORS limited to the dashboard |
+| Browser ↔ API | HTTPS only. JWT sessions that expire after 8 h. Role checks on every endpoint. Login lockout after 5 failures. CORS limited to the dashboard. With `PUBLIC_ACCESS_ROLE` set, anyone who has the dashboard link can use it with that role: a demo setting, not for real operations |
 | Snapshots *(planned)* | A private storage bucket. The dashboard gets short-lived signed URLs, so only signed-in operators can view images of people |
 | API ↔ database | TLS (`sslmode=require`). Credentials in environment variables. Row-level security closes Supabase's public Data API |
 | Dashboard host | `X-Frame-Options: DENY`, strict referrer policy |

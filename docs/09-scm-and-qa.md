@@ -102,21 +102,22 @@ flowchart LR
 |---|---|---|
 | backend | `ruff check`, `pytest` (SQLite), `flask db upgrade && flask db check` | Lint error, failing test, model/migration drift |
 | frontend | `eslint` (including architecture layer rules), `vitest`, `tsc -b`, `vite build` | Lint or type error, a layer rule broken, failing test, build error |
-| firmware | `run_tests.sh` (49 checks), `arduino/compile-sketches` for `arduino:renesas_uno:unor4wifi` | Logic regression, compile error |
+| firmware | `run_tests.sh` (65 checks), `arduino/compile-sketches` for `arduino:renesas_uno:unor4wifi` | Logic regression, compile error |
 
 ## 7. Test strategy
 
 | Level | Tool | What it proves | Size | Run it |
 |---|---|---|---|---|
-| Unit: analysis | pytest | Baseline learning, z-score, persistence, risk, priority, shielding maths | part of 69 | `cd backend && pytest tests/test_analysis.py` |
-| Unit: protocol | pytest | Every MQTT payload is validated and bounded; bad input is rejected | part of 69 | `pytest tests/test_payloads.py` |
-| Integration: ingestion | pytest + SQLite | Telemetry → AI → incidents → risk, in one transaction per message | part of 69 | `pytest tests/test_ingest_flow.py` |
-| Integration: commands | pytest | Correlation ids, timeouts, the reply-before-sent race | part of 69 | `pytest tests/test_commands.py` |
-| API and security | pytest + Flask test client | Every endpoint, role checks (401 / 403), validation errors | part of 69 | `pytest tests/test_api.py` |
-| Configuration | pytest | Production refuses unsafe settings; URL normalisation | part of 69 | `pytest tests/test_config.py` |
-| Same suite on PostgreSQL | pytest | Types, JSONB and constraints behave the same on Postgres | 69 | `TEST_DATABASE_URL=postgresql://… pytest` |
-| Frontend unit and component | Vitest + Testing Library | HTTP client and errors, i18n, domain mapping, login flow | 17 | `cd frontend && npm test` |
-| Firmware logic | g++ / clang++ / zig on a PC | Fall state machine, motion maths, alert manager, outbox, button | 49 checks | `firmware/test/run_tests.sh` |
+| Unit: analysis | pytest | Baseline learning, z-score, persistence, risk, priority, shielding maths | part of 77 | `cd backend && pytest tests/test_analysis.py` |
+| Unit: protocol | pytest | Every MQTT payload is validated and bounded; bad input is rejected | part of 77 | `pytest tests/test_payloads.py` |
+| Integration: ingestion | pytest + SQLite | Telemetry → AI → incidents → risk, in one transaction per message | part of 77 | `pytest tests/test_ingest_flow.py` |
+| Integration: commands | pytest | Correlation ids, timeouts, the reply-before-sent race | part of 77 | `pytest tests/test_commands.py` |
+| API and security | pytest + Flask test client | Every endpoint, role checks (401 / 403), validation errors | part of 77 | `pytest tests/test_api.py` |
+| Public access | pytest + Flask test client | No-sign-in mode per role, tokens still decide, typo refused at start-up | part of 77 | `pytest tests/test_public_access.py` |
+| Configuration | pytest | Production refuses unsafe settings; URL normalisation | part of 77 | `pytest tests/test_config.py` |
+| Same suite on PostgreSQL | pytest | Types, JSONB and constraints behave the same on Postgres | 69 (last Postgres run) | `TEST_DATABASE_URL=postgresql://… pytest` |
+| Frontend unit and component | Vitest + Testing Library | HTTP client and errors, i18n, domain mapping, sign-in and open-access flow, overview rules | 27 | `cd frontend && npm test` |
+| Firmware logic | g++ / clang++ / zig on a PC | Fall state machine, motion maths, alert manager, outbox, button, MAX30102 FIFO, heart rate and SpO2 on synthetic pulse waves | 65 checks | `firmware/test/run_tests.sh` |
 | Firmware build | arduino-cli | Compiles for the real board without warnings | 1 | CI, or `arduino-cli compile` |
 | End to end | aedes broker + simulator + checker | The whole chain over real MQTT, as the dashboard uses it | 18 checks | [tools/e2e/README.md](../tools/e2e/README.md) |
 | Visual QA | Headless browser screenshots | Every page in Arabic (RTL) and English, desktop and phone | 14 views | Manual review |

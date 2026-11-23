@@ -23,8 +23,9 @@ English.
 | **AI analysis** | A learned baseline per wearer and metric (Welford, then EWMA) with z-scores: flags readings that are abnormal *for that person* before fixed thresholds trip. A 0–100 risk score with the reasons behind it, incident priority, contact-lost detection |
 | **Operations room** | Overview, live map, units ranked by risk, unit detail with trends, prioritized incidents with timeline, acknowledge (the vest is told "help is coming"), resolve, remote commands |
 | **Armor** | Layer stack and the team's laboratory shielding data, with a Beer–Lambert dose calculator |
-| **Security** | Sign-in with roles (admin / operator / viewer), per-device broker credentials, secrets only in environment variables |
-| **Next phases** | Heart rate + SpO₂ and skin temperature (2), GPS (3), radiation counter (4). The protocol, database and dashboard already accept these |
+| **Security** | Sign-in with roles (admin / operator / viewer), or open access without sign-in for demos (`PUBLIC_ACCESS_ROLE`); per-device broker credentials; secrets only in environment variables |
+| **Vital signs** | MAX30102 heart rate and SpO₂ measured on the vest (own beat detection and ratio-of-ratios SpO₂, tested on synthetic pulse waves), with alarms and trends |
+| **Next phases** | Skin temperature (2), GPS (3), radiation counter (4). The protocol, database and dashboard already accept these |
 
 ## Architecture
 
@@ -107,10 +108,10 @@ CI starts on the first push. If you choose another repository name, update the b
 
 | Check | Result |
 |---|---|
-| Backend tests (pytest, SQLite and PostgreSQL) | 69 passed |
+| Backend tests (pytest) | 77 passed on SQLite (the earlier 69 also on PostgreSQL) |
 | Backend lint (ruff) · migrations in sync (`db check`) | clean · no drift |
-| Frontend lint with architecture rules, type check, tests (Vitest), build | 17 passed, 0 warnings |
-| Firmware logic tests on a PC · build for UNO R4 WiFi | 49 checks passed · 0 warnings, 38 % flash |
+| Frontend lint with architecture rules, type check, tests (Vitest), build | 27 passed, 0 warnings |
+| Firmware logic tests on a PC · build for UNO R4 WiFi | 65 checks passed · 0 warnings, 40 % flash |
 | End to end over MQTT (simulator → broker → backend → API) | 18 / 18 passed |
 
 How the project is tested and released: [docs/09-scm-and-qa.md](docs/09-scm-and-qa.md).
