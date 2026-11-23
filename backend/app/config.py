@@ -111,6 +111,12 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = _engine_options(SQLALCHEMY_DATABASE_URI)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # ── Public access (no sign-in) ───────────────────────────
+    # Role given to requests that carry NO session token: "viewer",
+    # "operator" or "admin". Empty (the default) = every request must sign in.
+    # A request that does send a token is always treated as that operator.
+    PUBLIC_ACCESS_ROLE = _str("PUBLIC_ACCESS_ROLE").lower()
+
     # ── Operator sessions (JWT) ──────────────────────────────
     JWT_EXPIRES_MINUTES = _int("JWT_EXPIRES_MINUTES", 8 * 60)  # one shift
     LOGIN_MAX_ATTEMPTS = _int("LOGIN_MAX_ATTEMPTS", 5)

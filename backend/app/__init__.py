@@ -16,6 +16,16 @@ from app.config import get_config
 from app.extensions import cors, db, migrate, render_migration_item
 
 MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
+PUBLIC_ACCESS_ROLES = ("viewer", "operator", "admin")
+
+
+def _check_access_settings(app: Flask) -> None:
+    """A typo must not silently change who can use the API."""
+    role = app.config.get("PUBLIC_ACCESS_ROLE") or ""
+    if role and role not in PUBLIC_ACCESS_ROLES:
+        raise RuntimeError(
+            f"PUBLIC_ACCESS_ROLE={role!r} is not valid: use viewer, operator, admin, or leave it empty"
+        )
 
 
 def _check_production_settings(app: Flask) -> None:
@@ -31,6 +41,7 @@ def _check_production_settings(app: Flask) -> None:
 def create_app(config_object=None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_object or get_config())
+    _check_access_settings(app)
     _check_production_settings(app)
     app.url_map.strict_slashes = False
     # Render terminates TLS in front of the app: trust one proxy hop for the

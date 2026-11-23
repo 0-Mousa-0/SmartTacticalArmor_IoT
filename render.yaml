@@ -25,6 +25,8 @@ services:
         sync: false
       - key: CORS_ORIGINS          # https://<dashboard>.onrender.com
         sync: false
+      - key: PUBLIC_ACCESS_ROLE    # dashboard opens without sign-in; visitors get this role
+        value: admin               # viewer | operator | admin, or remove to require sign-in
       - key: BOOTSTRAP_ADMIN_EMAIL # first administrator, created on first start
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD

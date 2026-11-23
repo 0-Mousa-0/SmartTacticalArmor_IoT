@@ -146,7 +146,7 @@ class AlertFacadeMixin:
                 **{f"open_{severity}": counts.get(severity, 0) for severity in values(Severity)}}
 
     # ── operator actions ─────────────────────────────────────
-    def acknowledge_alert(self, alert_id: str, operator_id: str, note: str | None = None) -> dict:
+    def acknowledge_alert(self, alert_id: str, operator_id: str | None, note: str | None = None) -> dict:
         now = utcnow()
         with self.transaction():
             alert = self._require_alert(alert_id)
@@ -171,7 +171,7 @@ class AlertFacadeMixin:
         result["device_notified"] = notified
         return result
 
-    def resolve_alert(self, alert_id: str, operator_id: str, note: str | None = None) -> dict:
+    def resolve_alert(self, alert_id: str, operator_id: str | None, note: str | None = None) -> dict:
         now = utcnow()
         with self.transaction():
             alert = self._require_alert(alert_id)

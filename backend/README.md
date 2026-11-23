@@ -73,7 +73,7 @@ To use the real database and broker, follow [Supabase setup](../docs/06-setup-su
 ## Tests and lint
 
 ```powershell
-pytest                     # 69 tests on in-memory SQLite
+pytest                     # 77 tests on in-memory SQLite
 ruff check .               # lint
 $env:TEST_DATABASE_URL = "postgresql://user:pass@localhost:5432/sta_test"; pytest   # same suite on PostgreSQL
 ```
@@ -91,6 +91,7 @@ Every setting is an environment variable. `.env.example` lists them all with com
 | `SECRET_KEY` | (dev-only key) | Signs session tokens. **Required in production** |
 | `DATABASE_URL` | SQLite file | Supabase Session pooler URI. **Required in production** |
 | `CORS_ORIGINS` | `*` | The dashboard's address(es), comma-separated |
+| `PUBLIC_ACCESS_ROLE` | (empty) | Open the dashboard without signing in: visitors with no session get this role (`viewer`, `operator` or `admin`). Empty = sign-in required. A request that sends a token is always that operator |
 | `JWT_EXPIRES_MINUTES` | `480` | Session length |
 | `LOGIN_MAX_ATTEMPTS` / `LOGIN_LOCKOUT_SECONDS` | `5` / `300` | Brute-force protection |
 | `BOOTSTRAP_ADMIN_EMAIL` / `_PASSWORD` / `_NAME` | (empty) | Creates the first administrator on start-up if none exists |

@@ -68,6 +68,13 @@ and a few values were edited so that each example shows a typical case.
 4. After `LOGIN_MAX_ATTEMPTS` (5) failed attempts, the client address is locked out for
    `LOGIN_LOCKOUT_SECONDS` (300) and receives `429`.
 
+**Public access (no sign-in).** When `PUBLIC_ACCESS_ROLE` is `viewer`, `operator` or `admin`, a request
+**without** an `Authorization` header is served as an anonymous visitor with that role, and
+`GET /auth/me` returns `{"public": true, "role": "<role>", "operator_id": null, …}`. The dashboard calls
+`/auth/me` at start-up and skips the sign-in page when it sees `public: true`. A request that does send a
+token is always that operator, and a bad or expired token is still rejected with `401`. Actions by
+visitors are stored without an operator (`acknowledged_by: null`).
+
 | Role | Can do |
 |---|---|
 | `viewer` | Read everything: overview, map, units, incidents, analysis, armor. For supervisors and competition judges. |
@@ -81,7 +88,7 @@ The dashboard hides actions a role cannot perform. The API enforces the same rul
 | Method | Path | Role | Purpose |
 |---|---|---|---|
 | POST | `/auth/login` | public | Sign in, receive a token |
-| GET | `/auth/me` | any | Current operator |
+| GET | `/auth/me` | any | Current operator, or the public-access visitor |
 | POST | `/auth/change-password` | any | Change own password |
 | GET | `/overview` | any | KPIs and every unit, for the command centre |
 | GET | `/devices` | any | All vests with live state and AI risk |

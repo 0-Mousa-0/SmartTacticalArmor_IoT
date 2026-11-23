@@ -1,14 +1,14 @@
 """Auth namespace — /api/v1/auth
 
   POST /login             email + password -> session token (JWT)
-  GET  /me                current operator profile
+  GET  /me                current operator profile (or the public-access profile)
   POST /change-password   change own password
 """
 from flask import g
-from flask_restx import Namespace, Resource, fields
+from flask_restx import Namespace, Resource, abort, fields
 
 from app.api.v1.common import body, call
-from app.api.v1.security import auth_required, client_ip
+from app.api.v1.security import auth_required, client_ip, public_profile
 from app.services.facade import get_facade
 
 ns = Namespace("auth", description="Operator sign-in and profile")
@@ -40,7 +40,13 @@ class Login(Resource):
 class Me(Resource):
     @auth_required()
     def get(self):
-        """Current operator profile."""
+        """Current operator profile.
+
+        Without a token in public-access mode this returns ``"public": true``
+        and the visitor role, which tells the dashboard to skip the sign-in page.
+        """
+        if g.operator_id is None:
+            return public_profile(g.operator_role)
         return call(ns, lambda: get_facade().get_profile(g.operator_id))
 
 
@@ -50,6 +56,8 @@ class ChangePassword(Resource):
     @ns.expect(password_model, validate=True)
     def post(self):
         """Change the signed-in operator's password."""
+        if g.operator_id is None:
+            abort(403, "Public access has no account password")
         data = body()
         return call(ns, lambda: get_facade().change_password(
             g.operator_id, data.get("current_password"), data.get("new_password")))
