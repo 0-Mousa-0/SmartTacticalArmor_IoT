@@ -18,12 +18,22 @@ interface VitalProps {
   missing?: string;
   hint?: string;
   iconClass?: string;
+  /** takes the whole row */
+  wide?: boolean;
 }
 
-function Vital({ icon, label, value, unit, tone = 'normal', missing, hint, iconClass }: VitalProps) {
+function Vital({ icon, label, value, unit, tone = 'normal', missing, hint, iconClass, wide }: VitalProps) {
   const shown = missing ? null : value;
   return (
-    <div className={cx(s.vital, missing && s.vitalMissing, tone === 'warning' && s.vitalWarning, tone === 'critical' && s.vitalCritical)}>
+    <div
+      className={cx(
+        s.vital,
+        wide && s.vitalWide,
+        missing && s.vitalMissing,
+        tone === 'warning' && s.vitalWarning,
+        tone === 'critical' && s.vitalCritical,
+      )}
+    >
       <span className={s.vitalLabel}>
         <Icon name={icon} size={15} className={iconClass} />
         {label}
@@ -107,13 +117,7 @@ export function LiveReadings({ unit }: { unit: Unit | null }) {
             value={temp !== null ? fmt.number(temp, 1) : null}
             unit="°C"
             tone={vestTempTone(temp)}
-          />
-          <Vital
-            icon="radiation"
-            label={t('sensors.radiation')}
-            value={tm?.radiationUsvh != null ? fmt.number(tm.radiationUsvh, 2) : null}
-            unit="µSv/h"
-            missing={hasSensor(unit, 'radiation') ? undefined : notFitted(SENSOR_PHASE.radiation)}
+            wide
           />
         </div>
 
@@ -131,7 +135,6 @@ export function LiveReadings({ unit }: { unit: Unit | null }) {
             <span className="ltr">{tm?.activityG != null ? `${fmt.number(tm.activityG, 3)} g` : '—'}</span>
           </Fact>
           <Fact label={t('sensors.still')}>{fmt.duration(tm?.stillS ?? null)}</Fact>
-          {hasSensor(unit, 'battery') && <Fact label={t('sensors.battery')}>{`${fmt.number(tm?.batteryPct ?? null)}%`}</Fact>}
           <Fact label={t('sensors.signal')}>
             <span className="ltr">{(tm?.rssi ?? unit.rssi) != null ? `${fmt.number(tm?.rssi ?? unit.rssi)} dBm` : '—'}</span>
           </Fact>

@@ -39,7 +39,7 @@ function Tile({ icon, label, value, unit, hint, tone = 'normal', missingPhase }:
   );
 }
 
-/** Live readings: Phase-1 sensors (IMU + temperature) plus the planned ones. */
+/** Live readings: motion and ambient temperature (MPU-6050), Wi-Fi, and the vital signs. */
 export function SensorGrid({ unit }: { unit: Unit }) {
   const { t, fmt } = useI18n();
   const tm = unit.telemetry;
@@ -74,14 +74,6 @@ export function SensorGrid({ unit }: { unit: Unit }) {
       <Tile icon="heart" label={t('sensors.heartRate')} value={fmt.number(tm?.heartRate)} unit="bpm" hint={vitalsHint} missingPhase={phase('heartRate')} />
       <Tile icon="droplet" label={t('sensors.spo2')} value={fmt.number(tm?.spo2)} unit="%" hint={vitalsHint} missingPhase={phase('spo2')} />
       <Tile icon="thermometer" label={t('sensors.skinTemp')} value={fmt.number(tm?.skinTempC, 1)} unit="°C" missingPhase={phase('skinTemp')} />
-      <Tile
-        icon="pin"
-        label={t('sensors.gps')}
-        value={tm?.lat !== null && tm?.lat !== undefined ? <span className="ltr">{`${tm.lat.toFixed(4)}, ${tm.lng?.toFixed(4)}`}</span> : '—'}
-        missingPhase={phase('gps')}
-      />
-      <Tile icon="radiation" label={t('sensors.radiation')} value={fmt.number(tm?.radiationUsvh, 3)} unit="µSv/h" missingPhase={phase('radiation')} />
-      <Tile icon="battery" label={t('sensors.battery')} value={fmt.number(tm?.batteryPct)} unit="%" missingPhase={phase('battery')} />
     </div>
   );
 }

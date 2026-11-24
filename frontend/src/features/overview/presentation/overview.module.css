@@ -382,6 +382,10 @@
   color: var(--text-faint);
 }
 
+.vitalWide {
+  grid-column: 1 / -1;
+}
+
 .vitalMissing {
   border-style: dashed;
   background: transparent;
