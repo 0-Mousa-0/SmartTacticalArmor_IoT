@@ -1,3 +1,4 @@
+import { ReadOnlyModeError } from '@/core/errors/ReadOnlyModeError';
 import { ApiError } from '@/core/http/ApiError';
 import { useI18n } from '@/core/i18n/useI18n';
 
@@ -5,6 +6,7 @@ import { useI18n } from '@/core/i18n/useI18n';
 export function useErrorMessage(): (error: unknown) => string {
   const { t } = useI18n();
   return (error: unknown) => {
+    if (error instanceof ReadOnlyModeError) return t('demo.readOnly');
     if (error instanceof ApiError) {
       if (error.isNetwork) return error.message === 'timeout' ? t('errors.timeout') : t('errors.network');
       if (error.isForbidden) return t('errors.forbidden');

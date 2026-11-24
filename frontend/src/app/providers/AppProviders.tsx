@@ -5,8 +5,8 @@ import type { Lang } from '@/core/i18n/types';
 import { AuthProvider } from '@/features/auth/application/AuthProvider';
 import { ToastProvider } from '@/shared/ui';
 import { createDependencies } from '../di/container';
-import { DependenciesContext } from '../di/DependenciesContext';
 import type { Dependencies } from '../di/types';
+import { DataSourceProvider } from './DataSourceProvider';
 import { createQueryClient } from './queryClient';
 
 interface AppProvidersProps {
@@ -18,17 +18,17 @@ interface AppProvidersProps {
 }
 
 export function AppProviders({ children, dependencies, queryClient, lang }: AppProvidersProps) {
-  const [deps] = useState(() => dependencies ?? createDependencies());
+  const [live] = useState(() => dependencies ?? createDependencies());
   const [client] = useState(() => queryClient ?? createQueryClient());
   return (
     <QueryClientProvider client={client}>
-      <DependenciesContext.Provider value={deps}>
+      <DataSourceProvider live={live}>
         <I18nProvider defaultLang={lang}>
           <ToastProvider>
             <AuthProvider>{children}</AuthProvider>
           </ToastProvider>
         </I18nProvider>
-      </DependenciesContext.Provider>
+      </DataSourceProvider>
     </QueryClientProvider>
   );
 }

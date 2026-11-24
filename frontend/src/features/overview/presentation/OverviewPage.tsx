@@ -1,10 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDataSource } from '@/app/di/dataSource';
 import { useI18n } from '@/core/i18n/useI18n';
 import { AlertItem } from '@/features/alerts/presentation/components/AlertItem';
+import { ScenarioPanel } from '@/features/demo/presentation/ScenarioPanel';
 import { toMapPoints } from '@/features/units/presentation/presenters';
 import { UnitsMap } from '@/shared/map/UnitsMap';
-import { Card, EmptyState, ErrorState, Icon, RingGauge, Skeleton, type IconName } from '@/shared/ui';
+import { Card, cx, EmptyState, ErrorState, Icon, RingGauge, Skeleton, type IconName } from '@/shared/ui';
 import { useOverview } from '../application/useOverview';
 import { defaultSelection, stateBreakdown, type UnitState } from '../domain/overviewRules';
 import { FieldForce } from './components/FieldForce';
@@ -52,6 +54,7 @@ const LEGEND: UnitState[] = ['normal', 'watch', 'critical', 'offline'];
 export default function OverviewPage() {
   const { t, fmt } = useI18n();
   const navigate = useNavigate();
+  const simulated = useDataSource().mode === 'demo';
   const { data, isLoading, error, refetch } = useOverview();
   const [picked, setPicked] = useState<string | null>(null);
 
@@ -80,9 +83,9 @@ export default function OverviewPage() {
           <p className={s.subtitle}>{t('overview.subtitle')}</p>
         </div>
         <div className={s.heroMeta}>
-          <span className={s.livePill}>
+          <span className={cx(s.livePill, simulated && s.simPill)}>
             <span className={s.liveDot} aria-hidden="true" />
-            {t('overview.live')}
+            {simulated ? t('demo.modeDemo') : t('overview.live')}
           </span>
           <span>{t('common.updated', { time: fmt.time(data.generatedAt) })}</span>
         </div>
@@ -130,6 +133,9 @@ export default function OverviewPage() {
               showLabels
               fitToPoints
               keepInitialView
+              // Only the operator's own pick moves the map: it keeps the whole force in view
+              // while the highlight follows the most urgent unit.
+              focusId={picked}
             />
             {anyOnPost && <span className={s.mapNote}>{t('map.postNote')}</span>}
             <div className={s.legend} aria-hidden="true">
@@ -162,7 +168,7 @@ export default function OverviewPage() {
           </div>
         </Card>
         <StatusBreakdown units={units} />
-        <SystemPanel health={data.system} />
+        {simulated ? <ScenarioPanel className={s.system} /> : <SystemPanel health={data.system} />}
       </section>
     </div>
   );

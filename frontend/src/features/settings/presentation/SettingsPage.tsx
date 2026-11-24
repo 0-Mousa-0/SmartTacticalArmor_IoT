@@ -3,6 +3,7 @@ import { env } from '@/core/config/env';
 import { useI18n } from '@/core/i18n/useI18n';
 import { useAuth } from '@/features/auth/application/authContext';
 import type { Operator } from '@/features/auth/domain/Operator';
+import { DataSourceCard } from '@/features/demo/presentation/DataSourceCard';
 import { useSystemHealth } from '@/features/system/application/useSystemHealth';
 import { isAdmin, type Role } from '@/shared/domain/types';
 import { Badge, Button, Card, FormError, FormGrid, Modal, PageHeader, SegmentedControl, SelectField, TextField, useErrorMessage, useToast, uiStyles } from '@/shared/ui';
@@ -219,6 +220,8 @@ export default function SettingsPage() {
             ]}
           />
         </Card>
+
+        <DataSourceCard />
 
         {!operator.isPublic && <ChangePasswordCard />}
 

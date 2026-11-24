@@ -143,7 +143,8 @@ sensor only means adding its firmware module.
 | AD-6 | **Explainable statistical AI first** | No labelled data exists yet. Per-wearer EWMA baselines with z-scores are cheap, need no training, and every alert can be explained to an operator | Training an ML model on synthetic data (would only look intelligent) |
 | AD-7 | **Clean architecture in React** (domain / data / application / presentation per feature) | UI never calls `fetch`; repositories are swappable (tests use fakes); ESLint enforces the dependency rule | Pages calling `fetch` directly |
 | AD-8 | **Arabic RTL first, full English translation** | Primary users are Saudi operations rooms; judges and partners may read English | Arabic only |
-| AD-9 | **Virtual vests through the real protocol** | Demos with one physical vest still show a full force, honestly labelled "Simulated"; the same tool drives end-to-end tests | Fake data inside the dashboard |
+| AD-9 | **Virtual vests through the real protocol** | Demos with one physical vest still show a full force, honestly labelled "Simulated"; the same tool drives end-to-end tests | Fake data inside the dashboard (later added for presentations only: AD-10) |
+| AD-10 | **Simulation mode inside the dashboard** (as in DUSK-1) | A presentation needs a full, moving picture even when no vest is online and no simulator runs on a laptop. The simulation sits behind the same repository interfaces as the API, ports the firmware's and the server's rules so the data stays logical, is labelled on every page, and never writes to the server | Only the Python virtual vests of AD-9 (needs a laptop running during the demo); a recorded replay (cannot be acknowledged or commanded) |
 
 ## 7. Free-tier budgets and how the design fits them
 

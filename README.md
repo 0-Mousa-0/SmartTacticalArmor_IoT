@@ -22,6 +22,7 @@ English.
 | **Link** | MQTT 3.1.1 over TLS (EMQX Cloud), retained status with Last Will, QoS 1 alerts, commands with correlation ids |
 | **AI analysis** | A learned baseline per wearer and metric (Welford, then EWMA) with z-scores: flags readings that are abnormal *for that person* before fixed thresholds trip. A 0–100 risk score with the reasons behind it, incident priority, contact-lost detection |
 | **Operations room** | Overview, live map, units ranked by risk, unit detail with trends, prioritized incidents with timeline, acknowledge (the vest is told "help is coming"), resolve, remote commands |
+| **Simulation mode** | One switch (or the `?demo` link) runs the dashboard on a built-in simulation, as in DUSK-1: the whole force with logical demo readings (vital signs, temperature, posture, alerts, AI risk) on a repeating 12-minute storyline. Clearly labelled, never sent or saved ([details](frontend/README.md#simulation-mode)) |
 | **Armor** | Layer stack and the team's laboratory shielding data, with a Beer–Lambert dose calculator |
 | **Security** | Sign-in with roles (admin / operator / viewer), or open access without sign-in for demos (`PUBLIC_ACCESS_ROLE`); per-device broker credentials; secrets only in environment variables |
 | **Vital signs** | MAX30102 heart rate and SpO₂ measured on the vest (own beat detection and ratio-of-ratios SpO₂, tested on synthetic pulse waves), with alarms and trends |
@@ -110,8 +111,8 @@ CI starts on the first push. If you choose another repository name, update the b
 |---|---|
 | Backend tests (pytest) | 77 passed on SQLite (the earlier 69 also on PostgreSQL) |
 | Backend lint (ruff) · migrations in sync (`db check`) | clean · no drift |
-| Frontend lint with architecture rules, type check, tests (Vitest), build | 27 passed, 0 warnings |
-| Firmware logic tests on a PC · build for UNO R4 WiFi | 65 checks passed · 0 warnings, 40 % flash |
+| Frontend lint with architecture rules, type check, tests (Vitest), build | 46 passed, 0 warnings |
+| Firmware logic tests on a PC · build for UNO R4 WiFi | 74 checks passed · 0 warnings, 42 % flash |
 | End to end over MQTT (simulator → broker → backend → API) | 18 / 18 passed |
 
 How the project is tested and released: [docs/09-scm-and-qa.md](docs/09-scm-and-qa.md).

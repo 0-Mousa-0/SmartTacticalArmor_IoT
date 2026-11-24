@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useDataSource } from '@/app/di/dataSource';
 import { useI18n } from '@/core/i18n/useI18n';
 import { useAuth } from '@/features/auth/application/authContext';
 import { useUnits } from '@/features/units/application/hooks';
@@ -16,7 +17,9 @@ type Editing<T> = { open: boolean; item: T | null };
 export default function FleetPage() {
   const { t, fmt } = useI18n();
   const { operator } = useAuth();
-  const admin = isAdmin(operator?.role);
+  // The simulated fleet is for looking at; edits belong to the real registry.
+  const simulated = useDataSource().mode === 'demo';
+  const admin = isAdmin(operator?.role) && !simulated;
   const toast = useToast();
   const errorMessage = useErrorMessage();
   const units = useUnits();
@@ -52,7 +55,7 @@ export default function FleetPage() {
     <>
       <PageHeader
         title={t('fleet.title')}
-        subtitle={admin ? t('fleet.subtitle') : t('fleet.readOnly')}
+        subtitle={simulated ? t('demo.fleetReadOnly') : admin ? t('fleet.subtitle') : t('fleet.readOnly')}
         actions={
           admin &&
           (tab === 'vests' ? (

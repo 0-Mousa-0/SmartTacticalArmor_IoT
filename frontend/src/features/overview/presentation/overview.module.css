@@ -59,6 +59,12 @@
   font-weight: 500;
 }
 
+.simPill {
+  background: var(--ai-soft);
+  border-color: rgb(169 155 255 / 0.45);
+  color: var(--ai);
+}
+
 .liveDot {
   width: 7px;
   height: 7px;
@@ -444,6 +450,8 @@
 }
 
 .trendRange {
+  flex: none;
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-faint);

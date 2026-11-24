@@ -1,0 +1,249 @@
+/* Simulation mode wears the AI/simulated purple everywhere (the "Simulated" badges use it too). */
+
+/* ── Top-bar switch ─────────────────────────────────────── */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+
+.switch:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--ai);
+  outline-offset: 2px;
+}
+
+.track {
+  position: relative;
+  flex: none;
+  width: 28px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  transition: background 0.2s;
+}
+
+.thumb {
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition:
+    inset-inline-start 0.2s,
+    background 0.2s;
+}
+
+.on {
+  background: var(--ai-soft);
+  border-color: rgb(169 155 255 / 0.45);
+  color: var(--ai);
+}
+
+.on:hover {
+  color: var(--ai);
+  border-color: rgb(169 155 255 / 0.7);
+}
+
+.on .track {
+  background: rgb(169 155 255 / 0.35);
+}
+
+.on .thumb {
+  inset-inline-start: 15px;
+  background: var(--ai);
+}
+
+@media (max-width: 600px) {
+  .switchLabel {
+    display: none;
+  }
+
+  .switch {
+    padding: 0 9px;
+  }
+}
+
+/* ── Banner under the top bar ───────────────────────────── */
+.banner {
+  background: linear-gradient(90deg, rgb(169 155 255 / 0.16), rgb(169 155 255 / 0.05));
+  border-bottom: 1px solid rgb(169 155 255 / 0.3);
+}
+
+[dir='rtl'] .banner {
+  background: linear-gradient(270deg, rgb(169 155 255 / 0.16), rgb(169 155 255 / 0.05));
+}
+
+.bannerInner {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 9px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.bannerIcon {
+  flex: none;
+  display: inline-flex;
+  color: var(--ai);
+}
+
+.bannerText {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.bannerText strong {
+  color: var(--ai);
+  font-weight: 500;
+  margin-inline-end: 8px;
+}
+
+.bannerButton {
+  flex: none;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgb(169 155 255 / 0.45);
+  background: transparent;
+  color: var(--ai);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bannerButton:hover {
+  background: var(--ai-soft);
+}
+
+.bannerButton:focus-visible {
+  outline: 2px solid var(--ai);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .bannerInner {
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    font-size: 12.5px;
+  }
+
+  /* Text across the whole width, the button on its own line below it. */
+  .bannerText {
+    flex-basis: calc(100% - 30px);
+  }
+}
+
+/* ── Scenario panel (overview, simulation mode) ─────────── */
+.scenarioBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.progressRow > :first-child {
+  flex: 1;
+}
+
+.heading {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.cues {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cue {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 10px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.cueTime {
+  font-size: 11.5px;
+  color: var(--ai);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cueUnit {
+  grid-column: 2;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+}
+
+.live .cueTime::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
+  background: var(--ai);
+  vertical-align: 1px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.note {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}

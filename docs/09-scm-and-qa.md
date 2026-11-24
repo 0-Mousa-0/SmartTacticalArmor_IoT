@@ -116,8 +116,8 @@ flowchart LR
 | Public access | pytest + Flask test client | No-sign-in mode per role, tokens still decide, typo refused at start-up | part of 77 | `pytest tests/test_public_access.py` |
 | Configuration | pytest | Production refuses unsafe settings; URL normalisation | part of 77 | `pytest tests/test_config.py` |
 | Same suite on PostgreSQL | pytest | Types, JSONB and constraints behave the same on Postgres | 69 (last Postgres run) | `TEST_DATABASE_URL=postgresql://… pytest` |
-| Frontend unit and component | Vitest + Testing Library | HTTP client and errors, i18n, domain mapping, sign-in and open-access flow, overview rules | 27 | `cd frontend && npm test` |
-| Firmware logic | g++ / clang++ / zig on a PC | Fall state machine, motion maths, alert manager, outbox, button, MAX30102 FIFO, heart rate and SpO2 on synthetic pulse waves | 65 checks | `firmware/test/run_tests.sh` |
+| Frontend unit and component | Vitest + Testing Library | HTTP client and errors, i18n, domain mapping, sign-in and open-access flow, overview rules, simulation mode (the ported server models, every story of the storyline, no false alarm in six simulated hours, switching sources) | 46 | `cd frontend && npm test` |
+| Firmware logic | g++ / clang++ / zig on a PC | Fall state machine, motion maths, alert manager, outbox, button, MAX30102 FIFO, heart rate and SpO2 on synthetic pulse waves, demo vitals simulator | 74 checks | `firmware/test/run_tests.sh` |
 | Firmware build | arduino-cli | Compiles for the real board without warnings | 1 | CI, or `arduino-cli compile` |
 | End to end | aedes broker + simulator + checker | The whole chain over real MQTT, as the dashboard uses it | 18 checks | [tools/e2e/README.md](../tools/e2e/README.md) |
 | Visual QA | Headless browser screenshots | Every page in Arabic (RTL) and English, desktop and phone | 14 views | Manual review |

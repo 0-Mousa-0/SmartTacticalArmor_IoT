@@ -4,8 +4,10 @@ import { useI18n } from '@/core/i18n/useI18n';
 import type { TranslationKey } from '@/core/i18n/types';
 import { useAlertSummary } from '@/features/alerts/application/hooks';
 import { useAuth } from '@/features/auth/application/authContext';
+import { SourceSwitch } from '@/features/demo/presentation/SourceSwitch';
 import { useSystemHealth } from '@/features/system/application/useSystemHealth';
 import { Button, Icon, type IconName } from '@/shared/ui';
+import { useDataSource } from '../di/dataSource';
 import s from './layout.module.css';
 
 interface NavItem {
@@ -47,11 +49,13 @@ function LinkStatus() {
   const health = useSystemHealth();
   const mqtt = health.data?.mqtt;
   const up = Boolean(mqtt?.enabled && mqtt.connected);
-  const title = mqtt?.lastMessageAt ? `${t('overview.lastMessage')}: ${fmt.relative(mqtt.lastMessageAt)}` : undefined;
+  const label = up ? t('shell.linkOnline') : t('shell.linkOffline');
+  // The text is hidden on most screens (only the dot shows): the tooltip always says it.
+  const title = mqtt?.lastMessageAt ? `${label} · ${t('overview.lastMessage')}: ${fmt.relative(mqtt.lastMessageAt)}` : label;
   return (
     <span className={`${s.link} ${up ? s.linkUp : s.linkDown}`} title={title}>
       <span className={s.linkDot} aria-hidden="true" />
-      <span className={s.linkLabel}>{up ? t('shell.linkOnline') : t('shell.linkOffline')}</span>
+      <span className={s.linkLabel}>{label}</span>
     </span>
   );
 }
@@ -92,6 +96,7 @@ function Account() {
 /** One bar across the top: brand, the page menu, and live status. */
 export function Topbar() {
   const { t, toggleLang, fmt } = useI18n();
+  const { mode } = useDataSource();
   const summary = useAlertSummary();
   const critical = summary.data?.openCritical ?? 0;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -135,7 +140,9 @@ export function Topbar() {
               {t('shell.critical', { n: fmt.number(critical) })}
             </Link>
           )}
-          <LinkStatus />
+          <SourceSwitch />
+          {/* The real vest link says nothing about simulated data. */}
+          {mode === 'live' && <LinkStatus />}
           <LiveClock />
           <Button variant="ghost" size="sm" icon="globe" onClick={toggleLang} aria-label={t('shell.otherLanguage')} className={s.langButton}>
             <span className={s.langLabel}>{t('shell.otherLanguage')}</span>

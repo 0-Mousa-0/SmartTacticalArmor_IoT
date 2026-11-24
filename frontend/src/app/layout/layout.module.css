@@ -286,9 +286,19 @@
 }
 
 /* Long labels drop out first, then icons, then the menu folds away.
-   Arabic labels are wider than English ones, so the steps are generous. */
+   Arabic labels are wider than English ones, so the steps are generous.
+   The vest-link text goes first of all: its coloured dot (and tooltip) says the same. */
+@media (max-width: 2200px) {
+  .linkLabel {
+    display: none;
+  }
+
+  .link {
+    padding: 0 10px;
+  }
+}
+
 @media (max-width: 1800px) {
-  .linkLabel,
   .langLabel,
   .publicLabel {
     display: none;

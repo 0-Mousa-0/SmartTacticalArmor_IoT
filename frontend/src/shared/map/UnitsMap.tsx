@@ -32,6 +32,8 @@ interface UnitsMapProps {
   fitToPoints?: boolean;
   /** Don't fly to the selection the map starts with (only to later changes). */
   keepInitialView?: boolean;
+  /** The unit to fly to when it changes; the selected unit by default. */
+  focusId?: string | null;
 }
 
 // Stroke icons (24×24) drawn inside the marker badge.
@@ -120,8 +122,9 @@ export function UnitsMap({
   showLabels = false,
   fitToPoints = false,
   keepInitialView = false,
+  focusId,
 }: UnitsMapProps) {
-  const selected = points.find((point) => point.id === selectedId);
+  const focus = points.find((point) => point.id === (focusId === undefined ? selectedId : focusId));
   // Icons are rebuilt only when what they show changes, not on every poll.
   const iconKey = points.map((p) => `${p.id}:${p.status}:${p.color}:${p.approximate}:${p.pulse}`).join('|');
   const icons = useMemo(
@@ -165,7 +168,7 @@ export function UnitsMap({
         ))}
         <TrackSize />
         {fitToPoints && <FitToPoints points={points} />}
-        <FlyToSelection point={selected} skipFirst={keepInitialView} />
+        <FlyToSelection point={focus} skipFirst={keepInitialView} />
       </MapContainer>
     </div>
   );
