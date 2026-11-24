@@ -6,7 +6,7 @@ import s from '../overview.module.css';
 const MINUTES = 15;
 
 /** Small trend under the readings: heart rate when the vest measures it, else vest temperature. */
-export function TrendSpark({ unitId }: { unitId: string }) {
+export function TrendSpark({ unitId, simulated = false }: { unitId: string; simulated?: boolean }) {
   const { t, fmt } = useI18n();
   const { data } = useTelemetryHistory(unitId, MINUTES);
   const points = data ?? [];
@@ -27,7 +27,10 @@ export function TrendSpark({ unitId }: { unitId: string }) {
   return (
     <div className={s.trend}>
       <div className={s.trendHead}>
-        <span>{hasHeart ? t('overview.trendHeart') : t('overview.trendTemp')}</span>
+        <span>
+          {hasHeart ? t('overview.trendHeart') : t('overview.trendTemp')}
+          {hasHeart && simulated && ` · ${t('sensors.simulated')}`}
+        </span>
         <span className={`${s.trendRange} ltr`}>
           {fmt.number(min, digits)} – {fmt.number(max, digits)}
         </span>

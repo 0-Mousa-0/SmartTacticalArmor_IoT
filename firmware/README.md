@@ -9,8 +9,8 @@ broker and topics are in [`../docs/05-mqtt-protocol.md`](../docs/05-mqtt-protoco
 |---|---|
 | Board | Arduino UNO R4 WiFi (Renesas RA4M1 + ESP32-S3 Wi-Fi) |
 | Sensors | MPU-6050 / GY-521 (accelerometer, gyroscope, **die temperature**); MAX30102 (heart rate, SpO2), optional |
-| Size | 106 KB flash (40 %), 12.1 KB RAM (36 %) — room for the Phase 2–4 sensors |
-| Verified | Compiles with `arduino-cli` for `arduino:renesas_uno:unor4wifi` (core 1.6.0) with no warnings; 65 host unit checks pass |
+| Size | 111 KB flash (42 %), 12.1 KB RAM (37 %) — room for the Phase 2–4 sensors |
+| Verified | Compiles with `arduino-cli` for `arduino:renesas_uno:unor4wifi` (core 1.6.0) with no warnings; 74 host unit checks pass |
 
 ## 1. Wiring
 
@@ -138,6 +138,7 @@ SmartTacticalArmor/
     ├── sensors/Mpu6050        I2C register driver (+ MPU-6500/9250 clones)
     ├── sensors/Max30102       I2C register driver: SpO2 mode, 50 samples/s through the chip's FIFO
     ├── vitals/PulseOximeter   heart rate (beat detection) + SpO2 (ratio of ratios)                     [pure C++]
+    ├── vitals/VitalsSimulator demo heart rate / SpO2 driven by the real movement (SIMULATE_VITALS)    [pure C++]
     ├── net/MqttLink           Wi-Fi + MQTT/TLS, Last Will, command inbox, NTP time
     ├── app/                   Payloads (JSON contract), CommandParser
     └── ui/                    StatusDisplay (LED matrix), Haptics (optional buzzer / vibration)
@@ -166,6 +167,12 @@ cd firmware/test && ./run_tests.sh        # Linux / macOS / Git Bash  (g++, clan
   is fixed against the skin inside the vest.
 * **Tests.** `firmware/test` feeds synthetic pulse waves (45, 72, 84 and 120 bpm, two oxygen levels, noise,
   breathing drift, lost samples) through the algorithm on a PC.
+* **Demo without a working MAX30102.** Set `SIMULATE_VITALS 1` in `config.h`. While no MAX30102 is found, the
+  vest sends **simulated** heart rate and SpO2 that follow the wearer's real movement from the MPU-6050: about
+  72 bpm at rest, rising gradually to about 140–150 with hard effort and recovering over a few minutes, a
+  little lower when lying down, SpO2 96–99 %. They are marked `"sim": true` in telemetry and
+  `"ppg": "simulated"` in the status message, the dashboard labels them "Simulated reading", and they never
+  raise vital-sign alarms. A working MAX30102 always takes over.
 
 ## 8. Adding the next sensors
 

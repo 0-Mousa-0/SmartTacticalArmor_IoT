@@ -83,6 +83,12 @@
 // sensor on the bench; set 1 once it is fixed against the wearer's skin inside the vest.
 #define PPG_SENSOR_OFF_ALERT    0
 #define PPG_SENSOR_OFF_MS       60000UL
+// Demo while no MAX30102 works: 1 = send SIMULATED heart rate and SpO2 that follow the
+// wearer's real movement (MPU-6050): ~72 bpm at rest, up to ~150 with hard effort. The
+// dashboard labels them "simulated" and they never raise alarms. A working MAX30102
+// always wins. 0 = no vitals without the sensor.
+#define SIMULATE_VITALS         0
+#define SIM_RESTING_BPM         72.0f
 
 // ---------------- Vital-sign alarms (starting values — tune with test data) ----------------
 #define HR_HIGH_WARN            160

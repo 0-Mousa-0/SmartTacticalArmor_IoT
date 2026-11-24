@@ -51,6 +51,8 @@ The UNO R4 WiFi with an MPU-6050 and a MAX30102 sends this:
 
 `vit` is present only when a MAX30102 was found at power-on. `hr` and `spo2` are left out until they
 are measured (about 10 s after a finger is placed) and while nothing touches the sensor (`contact: false`).
+With `SIMULATE_VITALS 1` and no MAX30102, the vest sends demo values instead, marked `"sim": true`, and its
+status message reports `"ppg": "simulated"` so the dashboard can label them.
 
 Later phases add more optional sections. The backend already accepts and stores them:
 
@@ -145,7 +147,8 @@ The vest publishes this on every (re)connect and after `interval` or `silent` ch
  "interval_s":5,"buzzer":true}
 ```
 
-`sensors.ppg` is `true` when the vest found a MAX30102 at power-on.
+`sensors.ppg` is `true` when the vest found a MAX30102 at power-on, and `"simulated"` when it sends demo
+vitals instead (`SIMULATE_VITALS 1`).
 
 The vest registers this **Last Will** with the broker when it connects. The broker publishes it if the
 vest disappears without a clean disconnect (power loss, Wi-Fi gone):

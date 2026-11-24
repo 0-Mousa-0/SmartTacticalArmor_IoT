@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/core/i18n/useI18n';
 import type { Unit } from '@/features/units/domain/Unit';
-import { hasSensor, SENSOR_PHASE } from '@/features/units/domain/unitRules';
+import { hasSensor, SENSOR_PHASE, vitalsSimulated } from '@/features/units/domain/unitRules';
 import { Card, ConnectionPill, cx, EmptyState, Icon, RiskBadge, type IconName } from '@/shared/ui';
 import { heartRateTone, spo2Tone, vestTempTone, type Tone } from '../../domain/overviewRules';
 import s from '../overview.module.css';
@@ -72,7 +72,8 @@ export function LiveReadings({ unit }: { unit: Unit | null }) {
   const notFitted = (phase: number) => `${t('sensors.notFitted')} · ${t('sensors.phase', { n: phase })}`;
   const ppgFitted = hasSensor(unit, 'heartRate');
   const noContact = ppgFitted && tm?.sensorContact === false;
-  const vitalsHint = noContact ? t('overview.placeFinger') : undefined;
+  const simulated = vitalsSimulated(unit);
+  const vitalsHint = noContact ? t('overview.placeFinger') : simulated ? t('sensors.simulated') : undefined;
   const heart = tm?.heartRate ?? null;
   const spo2 = tm?.spo2 ?? null;
   const temp = tm?.vestTempC ?? null;
@@ -121,7 +122,7 @@ export function LiveReadings({ unit }: { unit: Unit | null }) {
           />
         </div>
 
-        <TrendSpark unitId={unit.id} />
+        <TrendSpark unitId={unit.id} simulated={simulated} />
 
         <dl className={s.facts}>
           <Fact label={t('overview.status')}>

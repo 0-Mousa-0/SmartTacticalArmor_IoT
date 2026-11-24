@@ -30,6 +30,7 @@ size_t buildTelemetry(const char* deviceId, const TelemetrySnapshot& t, char* ou
     vit["contact"] = t.skinContact;
     if (t.hasHeartRate) vit["hr"] = t.heartRate;
     if (t.hasSpo2) vit["spo2"] = t.spo2;
+    if (t.vitalsSimulated) vit["sim"] = true;  // demo values, not measured
   }
   if (t.hasRssi) doc["rssi"] = t.rssi;
   doc["alerts"] = t.alertMask;
@@ -46,7 +47,11 @@ size_t buildStatus(const char* deviceId, const StatusSnapshot& s, char* out, siz
   doc["rssi"] = s.rssi;
   JsonObject sensors = doc["sensors"].to<JsonObject>();
   sensors["imu"] = s.imuChip;
-  sensors["ppg"] = s.ppg;     // MAX30102 heart rate / SpO2
+  if (s.ppg == PPG_SIMULATED) {
+    sensors["ppg"] = "simulated";  // the dashboard labels the vitals as simulated
+  } else {
+    sensors["ppg"] = s.ppg == PPG_SENSOR;  // MAX30102 heart rate / SpO2
+  }
   sensors["temp"] = false;    // Phase 2: MAX30205 skin temperature
   sensors["gps"] = false;     // Phase 3: GPS
   sensors["geiger"] = false;  // Phase 4: radiation

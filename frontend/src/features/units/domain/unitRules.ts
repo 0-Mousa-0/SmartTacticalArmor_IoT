@@ -54,6 +54,9 @@ const STATUS_KEY: Record<OptionalSensor, string> = {
   battery: 'bat',
 };
 
+/** The vest sends demo heart rate / SpO2 (no MAX30102 working): label them, never hide it. */
+export const vitalsSimulated = (unit: Unit): boolean => unit.sensors.ppg === 'simulated';
+
 /** A sensor counts as fitted when the vest reports it, or when its data arrives. */
 export function hasSensor(unit: Unit, sensor: OptionalSensor): boolean {
   if (unit.sensors[STATUS_KEY[sensor]] === true) return true;

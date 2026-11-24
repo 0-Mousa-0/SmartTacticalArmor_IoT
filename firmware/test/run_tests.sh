@@ -17,5 +17,6 @@ $CXX -std=c++17 -Wall -Wextra -I"$SKETCH" \
   "$SKETCH/src/motion/FallDetector.cpp" \
   "$SKETCH/src/alerts/AlertManager.cpp" \
   "$SKETCH/src/vitals/PulseOximeter.cpp" \
+  "$SKETCH/src/vitals/VitalsSimulator.cpp" \
   -o build/test_logic
 ./build/test_logic

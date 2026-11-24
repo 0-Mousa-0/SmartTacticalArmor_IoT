@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useI18n } from '@/core/i18n/useI18n';
 import { Icon, type IconName } from '@/shared/ui';
 import type { Unit } from '../../domain/Unit';
-import { hasSensor, SENSOR_PHASE, type OptionalSensor } from '../../domain/unitRules';
+import { hasSensor, SENSOR_PHASE, vitalsSimulated, type OptionalSensor } from '../../domain/unitRules';
 import s from './sensors.module.css';
 
 interface TileProps {
@@ -47,7 +47,8 @@ export function SensorGrid({ unit }: { unit: Unit }) {
   const temp = tm?.vestTempC ?? null;
   const still = tm?.stillS ?? null;
   // The MAX30102 reports no values while nothing touches it.
-  const vitalsHint = tm?.sensorContact === false ? t('sensors.noContact') : undefined;
+  const vitalsHint =
+    tm?.sensorContact === false ? t('sensors.noContact') : vitalsSimulated(unit) ? t('sensors.simulated') : undefined;
 
   return (
     <div className={s.grid}>

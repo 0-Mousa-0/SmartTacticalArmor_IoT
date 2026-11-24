@@ -181,6 +181,7 @@ export const ar: Dictionary = {
     post: 'نقطة التمركز',
     gpsFix: 'موقع GPS',
     noContact: 'لا يوجد تلامس مع الجلد',
+    simulated: 'قراءة محاكاة',
   },
   commands: {
     title: 'أوامر الدرع',

@@ -18,7 +18,7 @@ import {
 } from '@/shared/ui';
 import { useUnit } from '../application/hooks';
 import type { Unit } from '../domain/Unit';
-import { unitLabel } from '../domain/unitRules';
+import { unitLabel, vitalsSimulated } from '../domain/unitRules';
 import { CommandLog, CommandPanel } from './components/CommandPanel';
 import { RiskPanel } from './components/RiskPanel';
 import { SensorGrid } from './components/SensorGrid';
@@ -136,7 +136,7 @@ export default function UnitDetailPage() {
               />
             }
           >
-            <TrendCharts unitId={unit.id} minutes={Number(range)} />
+            <TrendCharts unitId={unit.id} minutes={Number(range)} vitalsSimulated={vitalsSimulated(unit)} />
           </Card>
           <Card title={t('unit.incidents')} flush>
             <UnitIncidents unitId={unit.id} />

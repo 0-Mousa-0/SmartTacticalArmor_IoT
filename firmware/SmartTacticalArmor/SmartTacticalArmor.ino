@@ -52,6 +52,7 @@
 #include "src/ui/MatrixFrames.h"
 #include "src/ui/StatusDisplay.h"
 #include "src/vitals/PulseOximeter.h"
+#include "src/vitals/VitalsSimulator.h"
 
 #if IMU_ON_QWIIC
 #define SENSOR_WIRE Wire1
@@ -78,6 +79,10 @@ Mpu6050 imu;
 MotionAnalyzer motion({STILL_ACTIVITY_G, STILL_GYRO_DPS, BENT_TILT_DEG, LYING_TILT_DEG});
 Max30102 ppg;
 PulseOximeter oximeter({Max30102::SAMPLE_RATE_HZ, PPG_CONTACT_IR_MIN});
+VitalsSimulator vitalsSim(SIM_RESTING_BPM);  // demo values when SIMULATE_VITALS = 1 and no MAX30102
+
+// Simulated vitals only stand in while no real MAX30102 is working.
+bool vitalsSimulated() { return SIMULATE_VITALS != 0 && !ppg.ok(); }
 FallDetector fall({FF_THRESH_G, FF_MIN_MS, FALL_IMPACT_G, FALL_WINDOW_MS, IMPACT_G, POST_IMPACT_CHECK_MS, LYING_TILT_DEG});
 SosButton button(BUTTON_DEBOUNCE_MS, SOS_HOLD_MS);
 Haptics haptics;
@@ -142,8 +147,9 @@ void flushOutbox() {
 void publishStatus() {
   char ip[16];
   link.localIp(ip, sizeof(ip));
+  const PpgSource ppgSource = ppg.ok() ? PPG_SENSOR : (vitalsSimulated() ? PPG_SIMULATED : PPG_NONE);
   StatusSnapshot status = {FW_VERSION, ip, link.rssi(), imu.ok() ? imu.chipName() : "none",
-                           telemetryPeriodMs / 1000UL, haptics.buzzerEnabled(), ppg.ok()};
+                           telemetryPeriodMs / 1000UL, haptics.buzzerEnabled(), ppgSource};
   char json[320];
   const size_t n = buildStatus(DEVICE_ID, status, json, sizeof(json));
   link.publish("status", json, n, true, 1);  // retained: the backend sees it on (re)connect
@@ -167,11 +173,21 @@ void publishTelemetry(uint32_t nowMs) {
   t.alertMask = alerts.activeMask();
   t.prealert = alerts.prealertActive();
   t.ppgOk = ppg.ok();
+  t.vitalsSimulated = false;
   t.skinContact = oximeter.contact();
   t.hasHeartRate = oximeter.hasHeartRate();
   t.heartRate = static_cast<int32_t>(lroundf(oximeter.heartRate()));
   t.hasSpo2 = oximeter.hasSpo2();
   t.spo2 = static_cast<int32_t>(lroundf(oximeter.spo2()));
+  if (vitalsSimulated() && vitalsSim.started()) {  // demo values, marked "sim": true
+    t.ppgOk = true;
+    t.vitalsSimulated = true;
+    t.skinContact = true;
+    t.hasHeartRate = true;
+    t.heartRate = vitalsSim.heartRate();
+    t.hasSpo2 = true;
+    t.spo2 = vitalsSim.spo2();
+  }
 
   char json[384];
   const size_t n = buildTelemetry(DEVICE_ID, t, json, sizeof(json));
@@ -320,7 +336,11 @@ void vitalsRules(uint32_t nowMs) {
 
 // 1 Hz rules: conditions that hold over time (with persistence + clear).
 void rulesTask(uint32_t nowMs) {
-  if (ppg.ok()) vitalsRules(nowMs);
+  if (ppg.ok()) vitalsRules(nowMs);  // real readings only: simulated vitals never raise alarms
+  if (vitalsSimulated()) {           // the demo heart rate follows the wearer's real movement
+    const bool lying = imu.ok() && motion.posture() == POSTURE_LYING;
+    vitalsSim.update(nowMs, imu.ok() ? motion.activity() : 0.0f, lying);
+  }
   if (!imu.ok()) return;
   const uint32_t stillMs = motion.stillMs(nowMs);
   const bool still = stillMs >= INACTIVITY_MS;
@@ -429,6 +449,8 @@ void setup() {
 #endif
   if (ppg.begin(PPG_WIRE, PPG_LED_CURRENT)) {
     Serial.println(F("[PPG] MAX30102 OK — place a fingertip on the sensor"));
+  } else if (SIMULATE_VITALS) {
+    Serial.println(F("[PPG] MAX30102 not found — sending SIMULATED heart rate / SpO2 (SIMULATE_VITALS in config.h)"));
   } else {
     Serial.println(F("[PPG] MAX30102 not found — heart rate / SpO2 off (optional; see PPG_ON_QWIIC in config.h)"));
   }
@@ -438,6 +460,7 @@ void setup() {
 
   const uint32_t now = millis();
   tImu = tRules = tTelemetry = tUi = tPpg = now;
+  vitalsSim.seed(micros() ^ (static_cast<uint32_t>(analogRead(A0)) << 16));  // differs on every start
   Serial.println(F("[SYS] Ready"));
 }
 

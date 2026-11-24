@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { toUnit, type DeviceViewDto } from './data/mappers';
 import type { Unit } from './domain/Unit';
-import { hasSensor, isAtRisk, matchesSearch, sortByPriority, unitLabel } from './domain/unitRules';
+import { hasSensor, isAtRisk, matchesSearch, sortByPriority, unitLabel, vitalsSimulated } from './domain/unitRules';
 
 const dto = (overrides: Partial<DeviceViewDto> = {}): DeviceViewDto => ({
   device_id: 'd1',
@@ -69,5 +69,12 @@ describe('unit rules', () => {
     expect(hasSensor(toUnit(dto()), 'heartRate')).toBe(false);
     expect(hasSensor(toUnit(dto({ sensors: { ppg: true } })), 'heartRate')).toBe(true);
     expect(hasSensor(toUnit(dto({ telemetry: { radiation_usvh: 0.12 } })), 'radiation')).toBe(true);
+  });
+
+  it('recognises simulated vitals so the dashboard can label them', () => {
+    const simulated = toUnit(dto({ sensors: { ppg: 'simulated' }, telemetry: { heart_rate: 74, spo2: 98 } }));
+    expect(vitalsSimulated(simulated)).toBe(true);
+    expect(hasSensor(simulated, 'heartRate')).toBe(true);
+    expect(vitalsSimulated(toUnit(dto({ sensors: { ppg: true } })))).toBe(false);
   });
 });

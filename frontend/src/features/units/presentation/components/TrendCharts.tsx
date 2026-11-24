@@ -4,7 +4,17 @@ import { EmptyState, Skeleton } from '@/shared/ui';
 import { useTelemetryHistory } from '../../application/hooks';
 import s from '../unitsPage.module.css';
 
-export function TrendCharts({ unitId, minutes, zThreshold = 3 }: { unitId: string; minutes: number; zThreshold?: number }) {
+export function TrendCharts({
+  unitId,
+  minutes,
+  zThreshold = 3,
+  vitalsSimulated = false,
+}: {
+  unitId: string;
+  minutes: number;
+  zThreshold?: number;
+  vitalsSimulated?: boolean;
+}) {
   const { t } = useI18n();
   const { data, isLoading } = useTelemetryHistory(unitId, minutes);
   if (isLoading) return <Skeleton height={240} />;
@@ -25,7 +35,10 @@ export function TrendCharts({ unitId, minutes, zThreshold = 3 }: { unitId: strin
     <div className={s.charts}>
       {hasVitals && (
         <div className={s.chartWide}>
-          <p className={s.chartTitle}>{t('unit.vitalsChart')}</p>
+          <p className={s.chartTitle}>
+            {t('unit.vitalsChart')}
+            {vitalsSimulated && ` · ${t('sensors.simulated')}`}
+          </p>
           <TimeSeriesChart
             data={points}
             height={200}

@@ -176,6 +176,7 @@ export const en = {
     battery: 'Battery',
     notFitted: 'Not fitted yet',
     noContact: 'No skin contact',
+    simulated: 'Simulated reading',
     phase: 'Phase {n}',
     post: 'Assigned post',
     gpsFix: 'GPS fix',

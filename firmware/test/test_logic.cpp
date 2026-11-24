@@ -1,6 +1,8 @@
 // Host-side unit tests for the hardware-independent firmware logic.
 // Build & run (any C++17 compiler):  ./run_tests.sh   or   run_tests.ps1
+#include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <cstdio>
 #include <vector>
 
@@ -11,6 +13,7 @@
 #include "src/motion/MotionAnalyzer.h"
 #include "src/sensors/Max30102Fifo.h"
 #include "src/vitals/PulseOximeter.h"
+#include "src/vitals/VitalsSimulator.h"
 
 static int g_checks = 0, g_failures = 0;
 #define CHECK(cond, label)                                                       \
@@ -302,12 +305,62 @@ static void testPulseOximeter() {
   }
 }
 
+// Runs the simulator at 1 Hz; returns the largest change between two seconds.
+static int runSim(VitalsSimulator& sim, uint32_t& t, int seconds, float activity, bool lying, int& minHr, int& maxHr,
+                  int& minSpo2, int& maxSpo2) {
+  int previous = sim.started() ? sim.heartRate() : -1, biggestStep = 0;
+  minHr = minSpo2 = 1000;
+  maxHr = maxSpo2 = 0;
+  for (int k = 0; k < seconds; k++, t += 1000) {
+    sim.update(t, activity, lying);
+    const int hr = sim.heartRate(), spo2 = sim.spo2();
+    if (previous >= 0 && std::abs(hr - previous) > biggestStep) biggestStep = std::abs(hr - previous);
+    previous = hr;
+    if (hr < minHr) minHr = hr;
+    if (hr > maxHr) maxHr = hr;
+    if (spo2 < minSpo2) minSpo2 = spo2;
+    if (spo2 > maxSpo2) maxSpo2 = spo2;
+  }
+  return biggestStep;
+}
+
+static void testVitalsSimulator() {
+  std::printf("VitalsSimulator (demo values without a MAX30102)\n");
+  VitalsSimulator sim(72.0f, 2026);
+  uint32_t t = 5000;
+  int lo, hi, sLo, sHi;
+  int step = runSim(sim, t, 120, 0.01f, false, lo, hi, sLo, sHi);
+  std::printf("         rest: %d-%d bpm, SpO2 %d-%d %%\n", lo, hi, sLo, sHi);
+  CHECK(lo >= 66 && hi <= 79, "at rest: 66-79 bpm");
+  CHECK(sLo >= 96 && sHi <= 99, "at rest: SpO2 96-99 %");
+
+  runSim(sim, t, 5, 0.6f, false, lo, hi, sLo, sHi);
+  CHECK(hi < 100, "effort starts: no sudden jump (still under 100 bpm after 5 s)");
+  step = std::max(step, runSim(sim, t, 115, 0.6f, false, lo, hi, sLo, sHi));
+  std::printf("         after 2 min of hard effort: %d bpm, SpO2 %d %%\n", sim.heartRate(), sim.spo2());
+  CHECK(sim.heartRate() >= 125 && sim.heartRate() <= 150, "hard effort: heart rate climbs to 125-150 bpm");
+  CHECK(sLo >= 96 && sHi <= 99, "hard effort: SpO2 stays 96-99 %");
+
+  step = std::max(step, runSim(sim, t, 30, 0.01f, false, lo, hi, sLo, sHi));
+  CHECK(sim.heartRate() > 95, "recovery is gradual (still above 95 bpm after 30 s)");
+  step = std::max(step, runSim(sim, t, 180, 0.01f, false, lo, hi, sLo, sHi));
+  std::printf("         3.5 min after the effort: %d bpm\n", sim.heartRate());
+  CHECK(sim.heartRate() <= 80, "back near rest within a few minutes");
+
+  step = std::max(step, runSim(sim, t, 90, 0.01f, true, lo, hi, sLo, sHi));  // settling down
+  step = std::max(step, runSim(sim, t, 60, 0.01f, true, lo, hi, sLo, sHi));
+  std::printf("         lying still: %d-%d bpm\n", lo, hi);
+  CHECK(hi <= 72, "lying still: a little lower than standing");
+  CHECK(step <= 6, "never jumps more than 6 bpm from one second to the next");
+}
+
 int main() {
   testFallDetector();
   testMotionAnalyzer();
   testAlertManager();
   testOutboxAndButton();
   testPulseOximeter();
+  testVitalsSimulator();
   std::printf("\n%d checks, %d failed: %s\n", g_checks, g_failures, g_failures ? "SOME TESTS FAILED" : "ALL TESTS PASSED");
   return g_failures ? 1 : 0;
 }

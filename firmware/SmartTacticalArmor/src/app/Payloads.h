@@ -7,6 +7,9 @@
 
 #include "../core/AlertTypes.h"
 
+// Where the heart rate / SpO2 come from (status message `sensors.ppg`).
+enum PpgSource : uint8_t { PPG_NONE = 0, PPG_SENSOR, PPG_SIMULATED };
+
 struct TelemetrySnapshot {
   uint32_t seq;
   uint32_t uptimeS;
@@ -23,7 +26,8 @@ struct TelemetrySnapshot {
   int32_t rssi;
   uint32_t alertMask;
   bool prealert;
-  bool ppgOk;              // MAX30102 fitted: the "vit" section is sent
+  bool ppgOk;              // vitals available: the "vit" section is sent
+  bool vitalsSimulated;    // demo values (VitalsSimulator), marked "sim": true
   bool skinContact;
   bool hasHeartRate;       // false = not measured yet (field omitted)
   int32_t heartRate;
@@ -38,7 +42,7 @@ struct StatusSnapshot {
   const char* imuChip;    // "none" when not found
   uint32_t intervalS;
   bool buzzer;
-  bool ppg;               // MAX30102 found
+  PpgSource ppg;          // MAX30102 found, simulated vitals, or none
 };
 
 size_t buildTelemetry(const char* deviceId, const TelemetrySnapshot& t, char* out, size_t capacity);
